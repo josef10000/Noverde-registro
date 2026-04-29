@@ -38,7 +38,14 @@ import {
 } from 'recharts';
 
 import { auth, db } from '../../lib/firebase';
-import { UserProfile, Team } from '../../types';
+import { 
+  Agreement, 
+  AgreementStatus, 
+  AgreementOrigin, 
+  DashboardStats, 
+  UserProfile, 
+  Team 
+} from '../../types';
 import { getTeamData } from '../../lib/teams';
 import { formatCurrency } from '../../utils/masks';
 import { StatCard } from './StatCard';

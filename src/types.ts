@@ -10,7 +10,9 @@ export enum AgreementOrigin {
   SMS = 'sms',
   SITE = 'site',
   RECLAME_AQUI = 'reclame_aqui',
-  OUTROS = 'outros'
+  OUTROS = 'outros',
+  PHONE = 'telefone',
+  CHAT = 'chat'
 }
 
 export type UserRole = 'supervisor' | 'member';
