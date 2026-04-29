@@ -84,7 +84,10 @@ export default function App() {
     );
   }
 
-  if (!profile || !profile.teamId) {
+  const hasNoTeam = !profile?.teamId;
+  const isSupervisorWithManagedTeams = profile?.role === 'supervisor' && (profile?.managedTeams?.length || 0) > 0;
+
+  if (!profile || (hasNoTeam && !isSupervisorWithManagedTeams)) {
     return (
       <>
         <AnimatePresence>
