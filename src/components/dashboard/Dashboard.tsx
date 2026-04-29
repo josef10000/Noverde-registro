@@ -49,7 +49,7 @@ import {
   UserProfile, 
   Team 
 } from '../../types';
-import { getTeamData, getTeamMembers } from '../../lib/teams';
+import { getTeamData, getTeamMembers, removeTeamMember } from '../../lib/teams';
 import { formatCurrency } from '../../utils/masks';
 import { StatCard } from './StatCard';
 import { FilterButton } from './FilterButton';
@@ -254,12 +254,27 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
 
   const handleEfetivar = async (id: string) => {
     try {
-      await updateDoc(doc(db, 'agreements', id), { 
-        status: AgreementStatus.PAID, 
-        paidAt: new Date().toISOString() 
+      const agreementRef = doc(db, 'agreements', id);
+      await updateDoc(agreementRef, { 
+        status: AgreementStatus.PAID,
+        paidAt: new Date().toISOString()
       });
+      showToast('Acordo efetivado com sucesso!', 'success');
     } catch (error) {
-      console.error(error);
+      showToast('Erro ao efetivar acordo.', 'error');
+    }
+  };
+
+  const handleRemoveOperator = async (memberUid: string, memberName: string) => {
+    if (confirm(`Deseja realmente remover ${memberName} desta equipe?`)) {
+      try {
+        await removeTeamMember(memberUid);
+        setCurrentTeamMembers(prev => prev.filter(m => m.uid !== memberUid));
+        if (selectedMemberId === memberUid) setSelectedMemberId('all');
+        showToast('Membro removido com sucesso!', 'success');
+      } catch (error) {
+        showToast('Erro ao remover membro.', 'error');
+      }
     }
   };
 
@@ -620,22 +635,36 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                 <span className="text-xs font-bold">Toda a Equipe</span>
               </button>
               {currentTeamMembers.map(member => (
-                <button
-                  key={member.uid}
-                  onClick={() => setSelectedMemberId(member.uid)}
-                  className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
-                    selectedMemberId === member.uid 
-                      ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
-                      : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-600'
-                  }`}
-                >
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    selectedMemberId === member.uid ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'
-                  }`}>
-                    {member.displayName[0].toUpperCase()}
-                  </div>
-                  <span className="text-xs font-bold whitespace-nowrap">{member.displayName.split(' ')[0]}</span>
-                </button>
+                <div key={member.uid} className="relative group/member">
+                  <button
+                    onClick={() => setSelectedMemberId(member.uid)}
+                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                      selectedMemberId === member.uid 
+                        ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                        : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      selectedMemberId === member.uid ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'
+                    }`}>
+                      {member.displayName[0].toUpperCase()}
+                    </div>
+                    <span className="text-xs font-bold whitespace-nowrap">{member.displayName.split(' ')[0]}</span>
+                  </button>
+                  
+                  {profile.role === 'supervisor' && member.uid !== profile.uid && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveOperator(member.uid, member.displayName);
+                      }}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/member:opacity-100 transition-all hover:bg-rose-600 shadow-lg z-10"
+                      title="Remover da equipe"
+                    >
+                      <X size={10} strokeWidth={3} />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </section>
