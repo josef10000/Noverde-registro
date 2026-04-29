@@ -63,5 +63,7 @@ export interface DashboardStats {
     waiting: number;
     broken: number;
     overdue: number;
+    today: number;
+    month: number;
   };
 }

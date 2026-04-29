@@ -241,6 +241,11 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     );
     const totalOverdue = overdueAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    const agreementsToday = memberFilteredAgreements.filter(a => new Date(a.createdAt) >= today);
+    const agreementsMonth = memberFilteredAgreements.filter(a => new Date(a.createdAt) >= startOfMonth);
+
     return {
       totalProjected,
       totalPaid,
@@ -252,6 +257,8 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         waiting: memberFilteredAgreements.filter(a => a.status === AgreementStatus.WAITING).length,
         broken: memberFilteredAgreements.filter(a => a.status === AgreementStatus.BROKEN).length,
         overdue: overdueAgreements.length,
+        today: agreementsToday.length,
+        month: agreementsMonth.length,
       }
     };
   }, [memberFilteredAgreements, monthlyGoal]);
@@ -490,11 +497,18 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             subtitle={`${stats.counts.overdue} acordos pendentes`}
           />
           <StatCard 
-            title="Eficiência Geral" 
-            value={`${Math.round(stats.effectivenessRate)}%`} 
-            icon={Target} 
+            title="Volume de Acordos" 
+            value={stats.counts.today} 
+            icon={CheckCircle2} 
+            color="primary"
+            subtitle={`Hoje: ${stats.counts.paid} Pagos | ${stats.counts.waiting} Pendentes`}
+          />
+          <StatCard 
+            title="Produtividade" 
+            value={(stats.counts.today / (currentTeamMembers.length || 1)).toFixed(1)} 
+            icon={Users} 
             color="amber"
-            subtitle={`Meta: ${effectivenessGoal}%`}
+            subtitle={`Média: ${stats.counts.month} registros no mês`}
           />
         </section>
 
@@ -698,6 +712,21 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 mt-4">
+                    <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
+                      <p className="text-[8px] text-slate-500 uppercase font-black tracking-tighter">Hoje</p>
+                      <p className="text-sm font-bold text-sky-400">
+                        {agreements.filter(a => a.teamId === t.id && new Date(a.createdAt) >= new Date().setHours(0,0,0,0)).length}
+                      </p>
+                    </div>
+                    <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
+                      <p className="text-[8px] text-slate-500 uppercase font-black tracking-tighter">Mês</p>
+                      <p className="text-sm font-bold text-white">
+                        {agreements.filter(a => a.teamId === t.id && new Date(a.createdAt) >= new Date(new Date().getFullYear(), new Date().getMonth(), 1)).length}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-2">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
