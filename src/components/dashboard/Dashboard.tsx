@@ -14,7 +14,10 @@ import {
   User as UserIcon,
   UserPlus,
   Users,
-  X
+  X,
+  AlertCircle,
+  Trophy,
+  TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -223,29 +226,41 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
 
   // Stats calculation based on member data (ignores search and status filter)
   const stats: DashboardStats = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const totalProjected = memberFilteredAgreements.reduce((acc, curr) => acc + curr.value, 0);
-    const totalPaid = memberFilteredAgreements
-      .filter(a => a.status === AgreementStatus.PAID)
-      .reduce((acc, curr) => acc + curr.value, 0);
+    
+    const paidAgreements = memberFilteredAgreements.filter(a => a.status === AgreementStatus.PAID);
+    const totalPaid = paidAgreements.reduce((acc, curr) => acc + curr.value, 0);
+    
+    const overdueAgreements = memberFilteredAgreements.filter(a => 
+      a.status === AgreementStatus.WAITING && 
+      new Date(a.dueDate) < today
+    );
+    const totalOverdue = overdueAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
     return {
       totalProjected,
       totalPaid,
+      totalOverdue,
       effectivenessRate: (totalPaid / (monthlyGoal || 1)) * 100,
       counts: {
         total: memberFilteredAgreements.length,
-        paid: memberFilteredAgreements.filter(a => a.status === AgreementStatus.PAID).length,
+        paid: paidAgreements.length,
         waiting: memberFilteredAgreements.filter(a => a.status === AgreementStatus.WAITING).length,
         broken: memberFilteredAgreements.filter(a => a.status === AgreementStatus.BROKEN).length,
+        overdue: overdueAgreements.length,
       }
     };
   }, [memberFilteredAgreements, monthlyGoal]);
 
   // Chart Data
   const chartData = useMemo(() => [
-    { name: 'Meta', value: monthlyGoal, color: '#1e293b' },
-    { name: 'Pago', value: stats.totalPaid, color: '#10b981' },
-    { name: 'Pendente', value: Math.max(0, stats.totalProjected - stats.totalPaid), color: '#f59e0b' }
+    { name: 'Meta', value: monthlyGoal, color: 'url(#colorMeta)' },
+    { name: 'Pago', value: stats.totalPaid, color: 'url(#colorPaid)' },
+    { name: 'Vencido', value: stats.totalOverdue, color: 'url(#colorOverdue)' },
+    { name: 'Pendente', value: Math.max(0, stats.totalProjected - stats.totalPaid - stats.totalOverdue), color: 'url(#colorPending)' }
   ], [monthlyGoal, stats]);
 
   const filteredAgreements = displayAgreements;
@@ -452,21 +467,38 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard 
+            title="Total Projetado" 
+            value={formatCurrency(stats.totalProjected)} 
+            icon={DollarSign} 
+            color="primary" 
+          />
+          <StatCard 
+            title="Efetivamente Pago" 
+            value={formatCurrency(stats.totalPaid)} 
+            icon={TrendingUp} 
+            color="emerald" 
+            trend="12% vs mês ant."
+          />
+          <StatCard 
+            title="Valores Vencidos" 
+            value={formatCurrency(stats.totalOverdue)} 
+            icon={AlertCircle} 
+            color="rose"
+            subtitle={`${stats.counts.overdue} acordos pendentes`}
+          />
+          <StatCard 
+            title="Eficiência Geral" 
+            value={`${Math.round(stats.effectivenessRate)}%`} 
+            icon={Target} 
+            color="amber"
+            subtitle={`Meta: ${effectivenessGoal}%`}
+          />
+        </section>
+
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <StatCard 
-              title="Total Projetado" 
-              value={formatCurrency(stats.totalProjected)} 
-              icon={DollarSign} 
-              colorClass="bg-primary/10 text-primary" 
-            />
-            <StatCard 
-              title="Efetivamente Pago" 
-              value={formatCurrency(stats.totalPaid)} 
-              icon={CheckCircle2} 
-              trend="12% vs mês ant."
-              colorClass="bg-emerald-500/10 text-emerald-400" 
-            />
+          <div className="lg:col-span-2 grid grid-cols-1 gap-6">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -515,25 +547,74 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             </motion.div>
           </div>
 
-          <div className="glass-card p-6 rounded-2xl shadow-xl flex flex-col">
-            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Performance vs Meta</h4>
-            <div className="flex-1 min-h-[200px]">
+          <div className="glass-card p-6 rounded-2xl shadow-xl flex flex-col relative overflow-hidden group">
+            {/* Background Glow */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all" />
+            
+            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Trophy size={16} className="text-amber-500" />
+              Performance vs Meta
+            </h4>
+            
+            <div className="flex-1 min-h-[250px] relative">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
+                <BarChart data={chartData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorMeta" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#334155" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#1e293b" stopOpacity={0.4}/>
+                    </linearGradient>
+                    <linearGradient id="colorPaid" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#059669" stopOpacity={0.4}/>
+                    </linearGradient>
+                    <linearGradient id="colorOverdue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#e11d48" stopOpacity={0.4}/>
+                    </linearGradient>
+                    <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#d97706" stopOpacity={0.4}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
-                    itemStyle={{ color: '#f8fafc', fontWeight: 'bold' }}
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#64748b" 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    dy={10}
                   />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  <YAxis hide domain={[0, 'auto']} />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    contentStyle={{ 
+                      backgroundColor: '#0f172a', 
+                      border: '1px solid #1e293b', 
+                      borderRadius: '16px',
+                      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.4)',
+                      padding: '12px'
+                    }}
+                    itemStyle={{ color: '#f8fafc', fontWeight: 'bold', fontSize: '12px' }}
+                    formatter={(value: number) => [formatCurrency(value), '']}
+                  />
+                  <Bar dataKey="value" radius={[10, 10, 0, 0]} barSize={40} animationDuration={1500}>
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              {chartData.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color.includes('#') ? item.color : '#334155' }} />
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{item.name}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>

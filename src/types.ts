@@ -55,11 +55,13 @@ export interface Agreement {
 export interface DashboardStats {
   totalProjected: number;
   totalPaid: number;
+  totalOverdue: number;
   effectivenessRate: number;
   counts: {
     total: number;
     paid: number;
     waiting: number;
     broken: number;
+    overdue: number;
   };
 }
