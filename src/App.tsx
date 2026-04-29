@@ -17,8 +17,13 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const userProfile = await getUserProfile(u.uid);
-        setProfile(userProfile);
+        try {
+          const userProfile = await getUserProfile(u.uid);
+          setProfile(userProfile);
+        } catch (error) {
+          console.error("Erro ao buscar perfil:", error);
+          setProfile(null);
+        }
       } else {
         setProfile(null);
       }
