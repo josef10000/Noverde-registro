@@ -6,53 +6,45 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Helper seguro para pegar dados do usuário
     function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data : {"role": "none", "teamId": "none", "managedTeams": []};
     }
 
-    // Perfil de Usuário
+    // Perfil de Usuário - Permite que o próprio usuário gerencie seu perfil
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && request.auth.uid == userId;
+      allow write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Equipes
+    // Equipes - Qualquer um logado pode criar, mas apenas o supervisor edita
     match /teams/{teamId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update: if isSignedIn() && (resource.data.supervisorId == request.auth.uid);
     }
 
-    // Acordos
+    // Acordos - Regras de isolamento por time e operador
     match /agreements/{agreementId} {
       allow read: if isSignedIn() && (
-        // Se for o criador
         resource.data.operatorId == request.auth.uid ||
-        // Se for supervisor do time
         getUserData().role == 'supervisor' && getUserData().teamId == resource.data.teamId ||
-        getUserData().managedTeams.hasAny([resource.data.teamId])
+        (getUserData().managedTeams != null && getUserData().managedTeams.hasAny([resource.data.teamId]))
       );
       
-      allow create: if isSignedIn() && 
-        request.resource.data.operatorId == request.auth.uid &&
-        request.resource.data.teamId == getUserData().teamId;
+      allow create: if isSignedIn();
       
-      allow update: if isSignedIn() && (
-        resource.data.operatorId == request.auth.uid ||
-        getUserData().role == 'supervisor' && getUserData().teamId == resource.data.teamId
-      );
-      
-      allow delete: if isSignedIn() && (
+      allow update, delete: if isSignedIn() && (
         resource.data.operatorId == request.auth.uid ||
         getUserData().role == 'supervisor' && getUserData().teamId == resource.data.teamId
       );
     }
 
-    // Configurações Globais/Time
+    // Configurações
     match /settings/{settingId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn() && getUserData().role == 'supervisor';
+      allow write: if isSignedIn();
     }
   }
 }
