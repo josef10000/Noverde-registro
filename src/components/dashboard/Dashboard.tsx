@@ -53,6 +53,8 @@ import { getTeamData, getTeamMembers, removeTeamMember } from '../../lib/teams';
 import { formatCurrency } from '../../utils/masks';
 import { StatCard } from './StatCard';
 import { FilterButton } from './FilterButton';
+import { ConfirmModal } from '../modals/ConfirmModal';
+import { TeamPerformance } from './TeamPerformance';
 import { OriginBadge } from './OriginBadge';
 import { AgreementModal } from '../modals/AgreementModal';
 import { GoalModal } from '../modals/GoalModal';
@@ -79,6 +81,8 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'personal' | 'team'>(profile.role === 'supervisor' ? 'team' : 'personal');
   const [team, setTeam] = useState<Team | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{ uid: string; name: string } | null>(null);
 
   const [selectedTeamId, setSelectedTeamId] = useState<string | 'all'>(profile.teamId || 'all');
   const [managedTeamsData, setManagedTeamsData] = useState<Team[]>([]);
@@ -265,16 +269,20 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     }
   };
 
-  const handleRemoveOperator = async (memberUid: string, memberName: string) => {
-    if (confirm(`Deseja realmente remover ${memberName} desta equipe?`)) {
-      try {
-        await removeTeamMember(memberUid);
-        setCurrentTeamMembers(prev => prev.filter(m => m.uid !== memberUid));
-        if (selectedMemberId === memberUid) setSelectedMemberId('all');
-        showToast('Membro removido com sucesso!', 'success');
-      } catch (error) {
-        showToast('Erro ao remover membro.', 'error');
-      }
+  const handleRemoveOperator = (memberUid: string, memberName: string) => {
+    setMemberToRemove({ uid: memberUid, name: memberName });
+    setIsConfirmOpen(true);
+  };
+
+  const confirmRemoveOperator = async () => {
+    if (!memberToRemove) return;
+    try {
+      await removeTeamMember(memberToRemove.uid);
+      setCurrentTeamMembers(prev => prev.filter(m => m.uid !== memberToRemove.uid));
+      if (selectedMemberId === memberToRemove.uid) setSelectedMemberId('all');
+      showToast('Membro removido com sucesso!', 'success');
+    } catch (error) {
+      showToast('Erro ao remover membro.', 'error');
     }
   };
 
@@ -560,6 +568,13 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
           />
         </section>
 
+        {/* Performance Section (Leaderboard & Table) - Only for Team View */}
+        {viewMode === 'team' && selectedTeamId !== 'all' && selectedMemberId === 'all' && (
+          <div className="mb-12">
+            <TeamPerformance agreements={agreements} members={currentTeamMembers} />
+          </div>
+        )}
+
         {/* Grade de Equipes - Visão Macro */}
         {viewMode === 'team' && selectedTeamId === 'all' && managedTeamsData.length > 0 && (
           <section className="space-y-4">
@@ -834,6 +849,17 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         clientCpf={selectedClientCpf}
         history={clientHistory}
         isLoading={isLoadingHistory}
+      />
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={confirmRemoveOperator}
+        title="Remover Membro"
+        message={`Tem certeza que deseja remover ${memberToRemove?.name} desta equipe? Esta ação não pode ser desfeita.`}
+        confirmText="Sim, Remover"
+        cancelText="Cancelar"
+        variant="danger"
       />
     </div>
   );
