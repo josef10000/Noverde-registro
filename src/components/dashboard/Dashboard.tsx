@@ -12,7 +12,8 @@ import {
   Trash2, 
   Check,
   User as UserIcon,
-  UserPlus
+  UserPlus,
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion';
 import { 
@@ -89,16 +90,34 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
 
   // Load Managed Teams Info
   useEffect(() => {
-    const loadTeams = async () => {
-      if (profile.managedTeams && profile.managedTeams.length > 0) {
-        const teams = await Promise.all(
-          profile.managedTeams.map(id => getTeamData(id))
-        );
-        setManagedTeamsData(teams.filter(t => t !== null) as Team[]);
+    if (!profile.managedTeams || profile.managedTeams.length === 0) return;
+
+    const loadTeamsData = async () => {
+      const teams = await Promise.all(
+        profile.managedTeams.map(id => getTeamData(id))
+      );
+      const validTeams = teams.filter((t): t is Team => t !== null);
+      setManagedTeamsData(validTeams);
+
+      // Atualiza metas baseado na seleção
+      if (selectedTeamId === 'all') {
+        const totalMonthly = validTeams.reduce((acc, t) => acc + (t.monthlyGoal || 0), 0);
+        const avgEff = validTeams.length > 0 
+          ? validTeams.reduce((acc, t) => acc + (t.effectivenessGoal || 85), 0) / validTeams.length
+          : 85;
+        setMonthlyGoal(totalMonthly || 50000);
+        setEffectivenessGoal(Math.round(avgEff));
+      } else {
+        const currentTeam = validTeams.find(t => t.id === selectedTeamId);
+        if (currentTeam) {
+          setMonthlyGoal(currentTeam.monthlyGoal || 50000);
+          setEffectivenessGoal(currentTeam.effectivenessGoal || 85);
+        }
       }
     };
-    loadTeams();
-  }, [profile.managedTeams]);
+
+    loadTeamsData();
+  }, [profile.managedTeams, selectedTeamId]);
 
   // Load Data based on selected team(s)
   useEffect(() => {
@@ -123,9 +142,6 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
             setEffectivenessGoal(data.effectivenessGoal || 85);
           }
         });
-      } else {
-        // Default macro goals or sum of goals? For now, default
-        setMonthlyGoal(50000 * teamsToWatch.length); 
       }
 
       // Firestore Subscription for Agreements
@@ -147,7 +163,7 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
       };
     };
     
-    return loadData();
+    loadData();
   }, [selectedTeamId, profile.managedTeams]);
 
   // Filtering Logic
@@ -505,6 +521,54 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
           />
         </section>
 
+        {/* Grade de Equipes - Visão Macro */}
+        {viewMode === 'team' && selectedTeamId === 'all' && managedTeamsData.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Users size={20} className="text-sky-400" />
+                Resumo por Equipe
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {managedTeamsData.map(t => (
+                <div 
+                  key={t.id}
+                  onClick={() => setSelectedTeamId(t.id)}
+                  className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl hover:border-sky-500/50 transition-all cursor-pointer group"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-bold text-white group-hover:text-sky-400 transition-colors">{t.name}</h3>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Meta: {formatCurrency(t.monthlyGoal)}</p>
+                    </div>
+                    <div className="bg-sky-500/10 text-sky-400 p-2 rounded-lg">
+                      <Target size={16} />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-1 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-sky-500 h-full rounded-full" style={{ width: '0%' }} /> 
+                    </div>
+                    <span className="text-xs font-bold text-slate-300">0%</span>
+                  </div>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(t.inviteToken);
+                      alert(`Código de convite para ${t.name} copiado!`);
+                    }}
+                    className="mt-2 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <UserPlus size={14} />
+                    Copiar Convite
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="relative group">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-sky-400 transition-colors">
             <Search size={20} />
@@ -541,8 +605,8 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
                     </td>
                   </tr>
                 ) : (
-                    {paginatedAgreements.map((agreement) => (
-                      <motion.tr 
+                  paginatedAgreements.map((agreement) => (
+                    <motion.tr 
                         key={agreement.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -613,7 +677,7 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
                           </div>
                         </td>
                       </motion.tr>
-                    ))}
+                    ))
                   )}
               </tbody>
             </table>
