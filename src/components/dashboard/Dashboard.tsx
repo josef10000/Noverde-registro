@@ -10,7 +10,9 @@ import {
   Loader2, 
   Edit3, 
   Trash2, 
-  Check 
+  Check,
+  User as UserIcon,
+  UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -54,7 +56,7 @@ import { OriginBadge } from './OriginBadge';
 import { AgreementModal } from '../modals/AgreementModal';
 import { GoalModal } from '../modals/GoalModal';
 import { HistoryModal } from '../modals/HistoryModal';
-import { UserPlus } from 'lucide-react';
+
 
 interface DashboardProps {
   user: User;
@@ -62,7 +64,7 @@ interface DashboardProps {
   onSettingsClick: () => void;
 }
 
-export const Dashboard = ({ user, profile }: DashboardProps) => {
+export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) => {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [monthlyGoal, setMonthlyGoal] = useState<number>(50000);
   const [effectivenessGoal, setEffectivenessGoal] = useState<number>(85);
@@ -74,7 +76,7 @@ export const Dashboard = ({ user, profile }: DashboardProps) => {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'personal' | 'team'>(profile.role === 'supervisor' ? 'team' : 'personal');
   const [team, setTeam] = useState<Team | null>(null);
-  
+
   const [selectedTeamId, setSelectedTeamId] = useState<string | 'all'>(profile.teamId || 'all');
   const [managedTeamsData, setManagedTeamsData] = useState<Team[]>([]);
   
@@ -345,7 +347,7 @@ export const Dashboard = ({ user, profile }: DashboardProps) => {
                 <span className="text-[9px] text-slate-500 font-medium uppercase tracking-tighter">{profile.jobTitle || 'Operador'}</span>
               </div>
               <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-500 border border-sky-500/20">
-                <User size={16} />
+                <UserIcon size={16} />
               </div>
             </div>
 
