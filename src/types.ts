@@ -5,14 +5,11 @@ export enum AgreementStatus {
 }
 
 export enum AgreementOrigin {
-  URA = 'ura',
+  SALESFORCE = 'salesforce',
+  OKTOR = 'oktor',
+  CALLIX = 'callix',
   WHATSAPP = 'whatsapp',
-  SMS = 'sms',
-  SITE = 'site',
-  RECLAME_AQUI = 'reclame_aqui',
-  OUTROS = 'outros',
-  PHONE = 'telefone',
-  CHAT = 'chat'
+  WEBPHONE = 'webphone'
 }
 
 export type UserRole = 'supervisor' | 'member';

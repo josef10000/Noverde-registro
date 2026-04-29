@@ -1,5 +1,4 @@
-import React from 'react';
-import { Phone, MessageSquare, MessageCircle } from 'lucide-react';
+import { Cloud, Cpu, Headset, MessageCircle, PhoneCall } from 'lucide-react';
 import { AgreementOrigin } from '../../types';
 
 interface OriginBadgeProps {
@@ -8,9 +7,11 @@ interface OriginBadgeProps {
 
 export const OriginBadge = ({ origin }: OriginBadgeProps) => {
   const configs = {
-    [AgreementOrigin.PHONE]: { icon: Phone, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', label: 'Telefone' },
-    [AgreementOrigin.CHAT]: { icon: MessageSquare, color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', label: 'Chat' },
+    [AgreementOrigin.SALESFORCE]: { icon: Cloud, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', label: 'Salesforce' },
+    [AgreementOrigin.OKTOR]: { icon: Cpu, color: 'bg-purple-500/10 text-purple-400 border-purple-500/20', label: 'Oktor' },
+    [AgreementOrigin.CALLIX]: { icon: Headset, color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', label: 'Callix' },
     [AgreementOrigin.WHATSAPP]: { icon: MessageCircle, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', label: 'WhatsApp' },
+    [AgreementOrigin.WEBPHONE]: { icon: PhoneCall, color: 'bg-sky-500/10 text-sky-400 border-sky-500/20', label: 'Webphone' },
   };
   
   const config = configs[origin];

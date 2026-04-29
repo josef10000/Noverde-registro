@@ -146,9 +146,11 @@ export const AgreementModal = ({
               className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all appearance-none outline-none text-slate-200"
             >
               <option value="" disabled>Selecione uma origem...</option>
-              <option value={AgreementOrigin.PHONE}>Telefone</option>
-              <option value={AgreementOrigin.CHAT}>Chat</option>
+              <option value={AgreementOrigin.SALESFORCE}>Salesforce</option>
+              <option value={AgreementOrigin.OKTOR}>Oktor</option>
+              <option value={AgreementOrigin.CALLIX}>Callix</option>
               <option value={AgreementOrigin.WHATSAPP}>WhatsApp</option>
+              <option value={AgreementOrigin.WEBPHONE}>Webphone</option>
             </select>
           </div>
 
