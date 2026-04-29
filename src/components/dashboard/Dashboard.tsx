@@ -14,7 +14,7 @@ import {
   User as UserIcon,
   UserPlus
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'motion';
 import { 
   collection, 
   onSnapshot, 
@@ -541,14 +541,11 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
                     </td>
                   </tr>
                 ) : (
-                  <AnimatePresence mode="popLayout">
                     {paginatedAgreements.map((agreement) => (
                       <motion.tr 
                         key={agreement.id}
-                        layout
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
                         className={`group transition-colors ${
                           agreement.status === AgreementStatus.PAID 
                             ? 'bg-emerald-500/5' 
@@ -617,8 +614,7 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
                         </td>
                       </motion.tr>
                     ))}
-                  </AnimatePresence>
-                )}
+                  )}
               </tbody>
             </table>
           </div>

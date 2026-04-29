@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Briefcase, Save, Plus, ArrowLeft } from 'lucide-react';
+import { User as UserIcon, Briefcase, Save, Plus, ArrowLeft } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { UserProfile } from '../../types';
@@ -62,7 +62,7 @@ export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam }: Pro
               Nome Completo
             </label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+              <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
               <input
                 type="text"
                 value={displayName}

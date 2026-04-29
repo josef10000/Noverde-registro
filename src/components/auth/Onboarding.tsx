@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'motion';
 import { Users, UserPlus, ArrowRight, Loader2 } from 'lucide-react';
 import { createTeam, joinTeam } from '../../lib/teams';
 import { User } from 'firebase/auth';
