@@ -10,11 +10,14 @@ import {
 } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 
+import { ToastType } from '../ui/Toast';
+
 interface LoginPageProps {
   onAuthSuccess: () => void;
+  showToast: (message: string, type?: ToastType) => void;
 }
 
-export const LoginPage = ({ onAuthSuccess }: LoginPageProps) => {
+export const LoginPage = ({ onAuthSuccess, showToast }: LoginPageProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -56,7 +59,7 @@ export const LoginPage = ({ onAuthSuccess }: LoginPageProps) => {
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
-      alert('E-mail de recuperação enviado!');
+      showToast('E-mail de recuperação enviado!', 'success');
       setIsForgotPassword(false);
     } catch (err: any) {
       setError(err.message);

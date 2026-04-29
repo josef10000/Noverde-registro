@@ -4,14 +4,17 @@ import { Users, UserPlus, ArrowRight, Loader2 } from 'lucide-react';
 import { createTeam, joinTeam } from '../../lib/teams';
 import { User } from 'firebase/auth';
 
+import { ToastType } from '../ui/Toast';
+
 interface OnboardingProps {
   user: User;
   onComplete: () => void;
   isAdditionalTeam?: boolean;
   onBack?: () => void;
+  showToast?: (message: string, type?: ToastType) => void;
 }
 
-export const Onboarding = ({ user, onComplete, isAdditionalTeam, onBack }: OnboardingProps) => {
+export const Onboarding = ({ user, onComplete, isAdditionalTeam, onBack, showToast }: OnboardingProps) => {
   const [mode, setMode] = useState<'choice' | 'create' | 'join'>(isAdditionalTeam ? 'create' : 'choice');
   const [teamName, setTeamName] = useState('');
   const [inviteToken, setInviteToken] = useState('');

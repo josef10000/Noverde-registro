@@ -9,11 +9,20 @@ import { ProfileSettings } from './components/profile/ProfileSettings';
 import { getUserProfile } from './lib/teams';
 import { UserProfile } from './types';
 
+import { Toast, ToastType } from './components/ui/Toast';
+import { AnimatePresence } from 'motion';
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'dashboard' | 'profile' | 'create-team'>('dashboard');
+  
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  const showToast = (message: string, type: ToastType = 'success') => {
+    setToast({ message, type });
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -51,40 +60,75 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginPage onAuthSuccess={() => {}} />;
-  }
-
-  if (!profile || !profile.teamId) {
-    return <Onboarding user={user} onComplete={refreshProfile} />;
-  }
-
-  if (view === 'profile') {
     return (
-      <ProfileSettings 
-        profile={profile} 
-        onUpdate={refreshProfile}
-        onBack={() => setView('dashboard')}
-        onCreateTeam={() => setView('create-team')}
-      />
+      <>
+        <AnimatePresence>
+          {toast && (
+            <Toast 
+              message={toast.message} 
+              type={toast.type} 
+              onClose={() => setToast(null)} 
+            />
+          )}
+        </AnimatePresence>
+        <LoginPage onAuthSuccess={() => {}} showToast={showToast} />
+      </>
     );
   }
 
-  if (view === 'create-team') {
+  if (!profile || !profile.teamId) {
     return (
-      <Onboarding 
-        user={user} 
-        onComplete={refreshProfile} 
-        isAdditionalTeam={true}
-        onBack={() => setView('profile')}
-      />
+      <>
+        <AnimatePresence>
+          {toast && (
+            <Toast 
+              message={toast.message} 
+              type={toast.type} 
+              onClose={() => setToast(null)} 
+            />
+          )}
+        </AnimatePresence>
+        <Onboarding user={user} onComplete={refreshProfile} showToast={showToast} />
+      </>
     );
   }
 
   return (
-    <Dashboard 
-      user={user} 
-      profile={profile} 
-      onSettingsClick={() => setView('profile')} 
-    />
+    <>
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      {view === 'profile' ? (
+        <ProfileSettings 
+          profile={profile} 
+          onUpdate={refreshProfile}
+          onBack={() => setView('dashboard')}
+          onCreateTeam={() => setView('create-team')}
+          showToast={showToast}
+        />
+      ) : view === 'create-team' ? (
+        <Onboarding 
+          user={user} 
+          onComplete={refreshProfile} 
+          isAdditionalTeam={true}
+          onBack={() => setView('profile')}
+          showToast={showToast}
+        />
+      ) : (
+        <Dashboard 
+          user={user} 
+          profile={profile} 
+          onSettingsClick={() => setView('profile')} 
+          showToast={showToast}
+        />
+      )}
+    </>
   );
 }

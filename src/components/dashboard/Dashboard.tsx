@@ -58,14 +58,16 @@ import { AgreementModal } from '../modals/AgreementModal';
 import { GoalModal } from '../modals/GoalModal';
 import { HistoryModal } from '../modals/HistoryModal';
 
+import { ToastType } from '../ui/Toast';
 
 interface DashboardProps {
   user: User;
   profile: UserProfile;
   onSettingsClick: () => void;
+  showToast: (message: string, type?: ToastType) => void;
 }
 
-export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) => {
+export const Dashboard = ({ user, profile, onSettingsClick, showToast }: DashboardProps) => {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [monthlyGoal, setMonthlyGoal] = useState<number>(50000);
   const [effectivenessGoal, setEffectivenessGoal] = useState<number>(85);
@@ -371,10 +373,10 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
               <button 
                 onClick={() => {
                   const currentTeam = managedTeamsData.find(t => t.id === selectedTeamId);
-                  if (currentTeam) {
-                    navigator.clipboard.writeText(currentTeam.inviteToken);
-                    alert(`Código de convite para ${currentTeam.name} copiado!`);
-                  }
+                    if (currentTeam) {
+                      navigator.clipboard.writeText(currentTeam.inviteToken);
+                      showToast(`Código de convite para ${currentTeam.name} copiado!`, 'success');
+                    }
                 }}
                 className="p-2.5 text-slate-500 hover:bg-emerald-500/10 hover:text-emerald-400 rounded-xl transition-all border border-transparent"
                 title="Copiar Convite"
@@ -556,7 +558,7 @@ export const Dashboard = ({ user, profile, onSettingsClick }: DashboardProps) =>
                     onClick={(e) => {
                       e.stopPropagation();
                       navigator.clipboard.writeText(t.inviteToken);
-                      alert(`Código de convite para ${t.name} copiado!`);
+                      showToast(`Código de convite para ${t.name} copiado!`);
                     }}
                     className="mt-2 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2"
                   >

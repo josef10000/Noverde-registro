@@ -4,18 +4,20 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { UserProfile } from '../../types';
 
+import { ToastType } from '../ui/Toast';
+
 interface ProfileSettingsProps {
   profile: UserProfile;
   onUpdate: () => void;
   onBack: () => void;
   onCreateTeam: () => void;
+  showToast: (message: string, type?: ToastType) => void;
 }
 
-export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam }: ProfileSettingsProps) {
+export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam, showToast }: ProfileSettingsProps) {
   const [displayName, setDisplayName] = useState(profile.displayName || '');
   const [jobTitle, setJobTitle] = useState(profile.jobTitle || '');
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState('');
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,11 +30,11 @@ export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam }: Pro
         displayName,
         jobTitle
       });
-      setMessage('Perfil atualizado com sucesso!');
+      showToast('Perfil atualizado com sucesso!', 'success');
       onUpdate();
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
-      setMessage('Erro ao salvar as alterações.');
+      showToast('Erro ao salvar as alterações.', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -89,12 +91,6 @@ export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam }: Pro
               />
             </div>
           </div>
-
-          {message && (
-            <p className={`text-sm ${message.includes('Erro') ? 'text-rose-400' : 'text-emerald-400'}`}>
-              {message}
-            </p>
-          )}
 
           <button
             type="submit"
