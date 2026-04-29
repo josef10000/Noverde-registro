@@ -27,18 +27,28 @@ export const createTeam = async (uid: string, userEmail: string, teamName: strin
   // 1. Criar a equipe
   await setDoc(doc(db, 'teams', teamId), teamData);
 
-  // 2. Atualizar o perfil do usuário para Supervisor
-  const userProfile: UserProfile = {
-    uid,
-    email: userEmail,
-    displayName: userEmail.split('@')[0],
-    role: 'supervisor',
-    teamId,
-    managedTeams: [teamId],
-    createdAt: new Date().toISOString()
-  };
-  
-  await setDoc(doc(db, 'users', uid), userProfile);
+  // 2. Atualizar o perfil do usuário
+  const userRef = doc(db, 'users', uid);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    await updateDoc(userRef, {
+      role: 'supervisor' as UserRole,
+      managedTeams: arrayUnion(teamId),
+      teamId: userSnap.data().teamId || teamId
+    });
+  } else {
+    const userProfile: UserProfile = {
+      uid,
+      email: userEmail,
+      displayName: userEmail.split('@')[0],
+      role: 'supervisor',
+      teamId,
+      managedTeams: [teamId],
+      createdAt: new Date().toISOString()
+    };
+    await setDoc(userRef, userProfile);
+  }
 
   return teamId;
 };

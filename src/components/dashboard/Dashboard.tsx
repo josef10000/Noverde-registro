@@ -59,6 +59,7 @@ import { UserPlus } from 'lucide-react';
 interface DashboardProps {
   user: User;
   profile: UserProfile;
+  onSettingsClick: () => void;
 }
 
 export const Dashboard = ({ user, profile }: DashboardProps) => {
@@ -74,6 +75,9 @@ export const Dashboard = ({ user, profile }: DashboardProps) => {
   const [viewMode, setViewMode] = useState<'personal' | 'team'>(profile.role === 'supervisor' ? 'team' : 'personal');
   const [team, setTeam] = useState<Team | null>(null);
   
+  const [selectedTeamId, setSelectedTeamId] = useState<string | 'all'>(profile.teamId || 'all');
+  const [managedTeamsData, setManagedTeamsData] = useState<Team[]>([]);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -81,46 +85,68 @@ export const Dashboard = ({ user, profile }: DashboardProps) => {
   const [clientHistory, setClientHistory] = useState<Agreement[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Load Team and Settings
+  // Load Managed Teams Info
+  useEffect(() => {
+    const loadTeams = async () => {
+      if (profile.managedTeams && profile.managedTeams.length > 0) {
+        const teams = await Promise.all(
+          profile.managedTeams.map(id => getTeamData(id))
+        );
+        setManagedTeamsData(teams.filter(t => t !== null) as Team[]);
+      }
+    };
+    loadTeams();
+  }, [profile.managedTeams]);
+
+  // Load Data based on selected team(s)
   useEffect(() => {
     const loadData = async () => {
-      if (profile.teamId) {
-        // Load Settings specific to team or global
-        const settingsRef = doc(db, 'settings', profile.teamId);
-        const unsubscribeSettings = onSnapshot(settingsRef, (snapshot) => {
+      const teamsToWatch = selectedTeamId === 'all' 
+        ? (profile.managedTeams || []) 
+        : [selectedTeamId];
+
+      if (teamsToWatch.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Load Settings (if single team)
+      let unsubscribeSettings = () => {};
+      if (selectedTeamId !== 'all') {
+        const settingsRef = doc(db, 'settings', selectedTeamId);
+        unsubscribeSettings = onSnapshot(settingsRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.data();
             setMonthlyGoal(data.monthlyGoal || 50000);
             setEffectivenessGoal(data.effectivenessGoal || 85);
           }
         });
-
-        // Load Team Info
-        const teamData = await getTeamData(profile.teamId);
-        setTeam(teamData);
-
-        // Firestore Subscription for Agreements in this Team
-        const q = query(
-          collection(db, 'agreements'), 
-          where('teamId', '==', profile.teamId),
-          orderBy('createdAt', 'desc')
-        );
-        
-        const unsubscribeAgreements = onSnapshot(q, (snapshot) => {
-          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Agreement));
-          setAgreements(data);
-          setIsLoading(false);
-        });
-
-        return () => {
-          unsubscribeSettings();
-          unsubscribeAgreements();
-        };
+      } else {
+        // Default macro goals or sum of goals? For now, default
+        setMonthlyGoal(50000 * teamsToWatch.length); 
       }
+
+      // Firestore Subscription for Agreements
+      const q = query(
+        collection(db, 'agreements'), 
+        where('teamId', 'in', teamsToWatch),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const unsubscribeAgreements = onSnapshot(q, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Agreement));
+        setAgreements(data);
+        setIsLoading(false);
+      });
+
+      return () => {
+        unsubscribeSettings();
+        unsubscribeAgreements();
+      };
     };
     
     return loadData();
-  }, [profile.teamId]);
+  }, [selectedTeamId, profile.managedTeams]);
 
   // Filtering Logic
   const displayAgreements = useMemo(() => {
@@ -266,18 +292,34 @@ export const Dashboard = ({ user, profile }: DashboardProps) => {
   return (
     <div className="min-h-screen bg-[#020617] font-sans text-slate-200 pb-20">
       <header className="bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-sky-500 text-white p-2 rounded-lg shadow-lg shadow-sky-500/20">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="bg-sky-500 text-white p-2 rounded-lg shadow-lg shadow-sky-500/20 cursor-pointer" onClick={onSettingsClick}>
               <PieIcon size={24} />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-xl font-bold tracking-tight text-white leading-none">RNV Gestão</h1>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Dashboard Operacional</p>
+              {profile.managedTeams && profile.managedTeams.length > 1 ? (
+                <select 
+                  value={selectedTeamId}
+                  onChange={(e) => setSelectedTeamId(e.target.value)}
+                  className="bg-transparent text-[10px] text-sky-400 uppercase tracking-widest font-bold mt-1 outline-none border-none cursor-pointer hover:text-sky-300 transition-colors"
+                >
+                  <option value="all" className="bg-slate-900 text-white">Visão Macro (Todas)</option>
+                  {managedTeamsData.map(t => (
+                    <option key={t.id} value={t.id} className="bg-slate-900 text-white">{t.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">
+                  {managedTeamsData.find(t => t.id === selectedTeamId)?.name || 'Dashboard Operacional'}
+                </p>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            {profile.role === 'supervisor' && (
+
+          <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+            {profile.role === 'supervisor' && selectedTeamId !== 'all' && (
               <div className="bg-slate-800/50 p-1 rounded-xl flex gap-1 mr-2">
                 <button 
                   onClick={() => setViewMode('personal')}
@@ -293,32 +335,48 @@ export const Dashboard = ({ user, profile }: DashboardProps) => {
                 </button>
               </div>
             )}
-            <div className="hidden md:flex flex-col items-end mr-2">
-              <span className="text-xs font-bold text-white">{profile.displayName}</span>
-              <span className="text-[10px] text-slate-500 font-medium">{team?.name || 'Carregando time...'}</span>
-            </div>
-            <button 
-              onClick={() => {
-                if (team) {
-                  navigator.clipboard.writeText(team.inviteToken);
-                  alert('Código de convite copiado para a área de transferência!');
-                }
-              }}
-              className="p-2.5 text-slate-500 hover:bg-emerald-500/10 hover:text-emerald-400 rounded-xl transition-all border border-transparent"
-              title="Copiar Código de Convite"
+            
+            <div 
+              className="flex items-center gap-3 px-3 py-1.5 bg-slate-800/30 rounded-xl border border-slate-800 hover:border-slate-700 cursor-pointer transition-all group"
+              onClick={onSettingsClick}
             >
-              <UserPlus size={20} />
-            </button>
+              <div className="flex flex-col items-end">
+                <span className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">{profile.displayName}</span>
+                <span className="text-[9px] text-slate-500 font-medium uppercase tracking-tighter">{profile.jobTitle || 'Operador'}</span>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-500 border border-sky-500/20">
+                <User size={16} />
+              </div>
+            </div>
+
+            {selectedTeamId !== 'all' && (
+              <button 
+                onClick={() => {
+                  const currentTeam = managedTeamsData.find(t => t.id === selectedTeamId);
+                  if (currentTeam) {
+                    navigator.clipboard.writeText(currentTeam.inviteToken);
+                    alert(`Código de convite para ${currentTeam.name} copiado!`);
+                  }
+                }}
+                className="p-2.5 text-slate-500 hover:bg-emerald-500/10 hover:text-emerald-400 rounded-xl transition-all border border-transparent"
+                title="Copiar Convite"
+              >
+                <UserPlus size={20} />
+              </button>
+            )}
+
             <button 
               onClick={() => signOut(auth)}
-              className="p-2.5 text-slate-500 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl transition-all border border-transparent hover:border-rose-500/20"
+              className="p-2.5 text-slate-500 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl transition-all"
               title="Sair"
             >
               <LogOut size={20} />
             </button>
+
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-sky-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/10 active:scale-95"
+              disabled={selectedTeamId === 'all'}
+              className="flex items-center gap-2 bg-sky-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/10 active:scale-95 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
             >
               <Plus size={20} />
               <span className="hidden sm:inline">Novo Acordo</span>

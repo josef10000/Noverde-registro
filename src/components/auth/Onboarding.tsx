@@ -7,10 +7,12 @@ import { User } from 'firebase/auth';
 interface OnboardingProps {
   user: User;
   onComplete: () => void;
+  isAdditionalTeam?: boolean;
+  onBack?: () => void;
 }
 
-export const Onboarding = ({ user, onComplete }: OnboardingProps) => {
-  const [mode, setMode] = useState<'choice' | 'create' | 'join'>('choice');
+export const Onboarding = ({ user, onComplete, isAdditionalTeam, onBack }: OnboardingProps) => {
+  const [mode, setMode] = useState<'choice' | 'create' | 'join'>(isAdditionalTeam ? 'create' : 'choice');
   const [teamName, setTeamName] = useState('');
   const [inviteToken, setInviteToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -51,9 +53,23 @@ export const Onboarding = ({ user, onComplete }: OnboardingProps) => {
   return (
     <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
       <div className="max-w-md w-full space-y-8">
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className="flex items-center text-slate-400 hover:text-white transition-colors"
+          >
+            Voltar
+          </button>
+        )}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-white tracking-tight">Bem-vindo ao RNV Gestão</h2>
-          <p className="mt-2 text-slate-400">Para começar, você precisa fazer parte de uma equipe.</p>
+          <h2 className="text-3xl font-bold text-white tracking-tight">
+            {isAdditionalTeam ? 'Criar Nova Equipe' : 'Bem-vindo ao RNV Gestão'}
+          </h2>
+          <p className="mt-2 text-slate-400">
+            {isAdditionalTeam 
+              ? 'Dê um nome para sua nova equipe de gestão.' 
+              : 'Para começar, você precisa fazer parte de uma equipe.'}
+          </p>
         </div>
 
         <motion.div 

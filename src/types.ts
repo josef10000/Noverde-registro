@@ -24,6 +24,7 @@ export interface UserProfile {
   role: UserRole;
   teamId?: string;
   managedTeams?: string[]; // Para supervisores que gerenciam múltiplos times
+  jobTitle?: string;
   createdAt: string;
 }
 

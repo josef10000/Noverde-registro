@@ -5,6 +5,7 @@ import { auth } from './lib/firebase';
 import { LoginPage } from './components/auth/LoginPage';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { Onboarding } from './components/auth/Onboarding';
+import { ProfileSettings } from './components/profile/ProfileSettings';
 import { getUserProfile } from './lib/teams';
 import { UserProfile } from './types';
 
@@ -12,6 +13,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<'dashboard' | 'profile' | 'create-team'>('dashboard');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -36,6 +38,7 @@ export default function App() {
     if (user) {
       const userProfile = await getUserProfile(user.uid);
       setProfile(userProfile);
+      setView('dashboard');
     }
   };
 
@@ -55,5 +58,33 @@ export default function App() {
     return <Onboarding user={user} onComplete={refreshProfile} />;
   }
 
-  return <Dashboard user={user} profile={profile} />;
+  if (view === 'profile') {
+    return (
+      <ProfileSettings 
+        profile={profile} 
+        onUpdate={refreshProfile}
+        onBack={() => setView('dashboard')}
+        onCreateTeam={() => setView('create-team')}
+      />
+    );
+  }
+
+  if (view === 'create-team') {
+    return (
+      <Onboarding 
+        user={user} 
+        onComplete={refreshProfile} 
+        isAdditionalTeam={true}
+        onBack={() => setView('profile')}
+      />
+    );
+  }
+
+  return (
+    <Dashboard 
+      user={user} 
+      profile={profile} 
+      onSettingsClick={() => setView('profile')} 
+    />
+  );
 }
