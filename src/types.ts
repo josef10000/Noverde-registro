@@ -33,6 +33,8 @@ export interface Team {
   name: string;
   supervisorId: string;
   inviteToken: string;
+  monthlyGoal?: number;
+  effectivenessGoal?: number;
   createdAt: string;
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion';
+import { motion } from 'motion/react';
 import { Mail, Lock, LogIn, Loader2, Chrome, PieChart } from 'lucide-react';
 import { 
   signInWithEmailAndPassword, 

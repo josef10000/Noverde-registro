@@ -10,7 +10,7 @@ import { getUserProfile } from './lib/teams';
 import { UserProfile } from './types';
 
 import { Toast, ToastType } from './components/ui/Toast';
-import { AnimatePresence } from 'motion';
+import { AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);

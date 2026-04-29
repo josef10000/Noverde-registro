@@ -22,7 +22,6 @@ export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam, showT
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setMessage('');
 
     try {
       const userRef = doc(db, 'users', profile.uid);

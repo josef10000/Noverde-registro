@@ -15,7 +15,7 @@ import {
   UserPlus,
   Users
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   collection, 
   onSnapshot, 
