@@ -281,19 +281,39 @@ export const Dashboard = ({ user }: DashboardProps) => {
               >
                 <Target size={14} />
               </button>
-              <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Taxa de Efetividade</p>
-              <div className="mt-4 flex items-end justify-between">
-                <h3 className={`text-3xl font-bold transition-colors duration-500 ${getEffectivenessColor(stats.effectivenessRate, effectivenessGoal)}`}>
-                  {stats.effectivenessRate.toFixed(1)}%
-                </h3>
-                <p className="text-xs font-medium text-slate-500 mb-1">Meta: {effectivenessGoal}% | Cota: {formatCurrency(monthlyGoal)}</p>
+              
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Recuperação de Cota</p>
+                  <h3 className="text-3xl font-bold text-white mt-1">
+                    {((stats.totalPaid / (monthlyGoal || 1)) * 100).toFixed(1)}%
+                  </h3>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Taxa de Efetividade</p>
+                  <p className={`text-xl font-bold ${getEffectivenessColor((stats.counts.paid / (stats.counts.total || 1)) * 100, effectivenessGoal)}`}>
+                    {((stats.counts.paid / (stats.counts.total || 1)) * 100).toFixed(1)}%
+                  </p>
+                  <p className="text-[8px] text-slate-500 font-medium uppercase mt-0.5">Base: {stats.counts.total} acordos</p>
+                </div>
               </div>
-              <div className="mt-3 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(stats.effectivenessRate, 100)}%` }}
-                  className={`h-full rounded-full bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]`}
-                />
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  <span>Progresso da Recuperação</span>
+                  <span>Meta: {formatCurrency(monthlyGoal)}</span>
+                </div>
+                <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden shadow-inner">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((stats.totalPaid / (monthlyGoal || 1)) * 100, 100)}%` }}
+                    className={`h-full rounded-full bg-gradient-to-r from-sky-600 to-sky-400 shadow-[0_0_15px_rgba(14,165,233,0.4)]`}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-slate-500 font-medium">
+                   <span>Recuperado: {formatCurrency(stats.totalPaid)}</span>
+                   <span>Faltam: {formatCurrency(Math.max(0, monthlyGoal - stats.totalPaid))}</span>
+                </div>
               </div>
             </motion.div>
           </div>
