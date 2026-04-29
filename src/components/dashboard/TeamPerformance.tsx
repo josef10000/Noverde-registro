@@ -9,6 +9,14 @@ interface TeamPerformanceProps {
 }
 
 export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) => {
+  if (members.length === 0) {
+    return (
+      <div className="p-8 border-2 border-dashed border-slate-800 rounded-3xl text-center text-slate-500">
+        Nenhum membro encontrado nesta equipe para gerar o ranking.
+      </div>
+    );
+  }
+
   // Process data for ranking and table
   const performanceData = useMemo(() => {
     const data: Record<string, { 
