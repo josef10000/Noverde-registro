@@ -17,7 +17,8 @@ import {
   X,
   AlertCircle,
   Trophy,
-  TrendingUp
+  TrendingUp,
+  Link as LinkIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -678,9 +679,16 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                       <h3 className="font-bold text-white group-hover:text-sky-400 transition-colors">{t.name}</h3>
                       <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Meta: {formatCurrency(t.monthlyGoal)}</p>
                     </div>
-                    <div className="bg-primary/10 text-sky-400 p-2 rounded-lg">
-                      <Target size={16} />
-                    </div>
+                    {profile.teamId === t.id ? (
+                      <div className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter border border-emerald-500/20 flex items-center gap-1">
+                        <Check size={12} />
+                        Minha Equipe
+                      </div>
+                    ) : (
+                      <div className="bg-primary/10 text-sky-400 p-2 rounded-lg">
+                        <Target size={16} />
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex-1 bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -688,17 +696,53 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                     </div>
                     <span className="text-xs font-bold text-slate-300">0%</span>
                   </div>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigator.clipboard.writeText(t.inviteToken);
-                      showToast(`Código de convite para ${t.name} copiado!`);
-                    }}
-                    className="mt-2 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2"
-                  >
-                    <UserPlus size={14} />
-                    Copiar Convite
-                  </button>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-4">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(t.inviteToken);
+                        showToast(`Código de convite para ${t.name} copiado!`);
+                      }}
+                      className="py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-1"
+                    >
+                      <UserPlus size={12} />
+                      Convite
+                    </button>
+                    
+                    {profile.role === 'supervisor' && (
+                      <button 
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const newTeamId = profile.teamId === t.id ? null : t.id;
+                          try {
+                            await updateDoc(doc(db, 'users', profile.uid), { teamId: newTeamId });
+                            showToast(newTeamId ? `Você agora faz parte da equipe ${t.name}!` : 'Vínculo com a equipe removido.');
+                            // Nota: O profile será atualizado pelo listener global no App.tsx
+                          } catch (error) {
+                            showToast('Erro ao atualizar vínculo.', 'error');
+                          }
+                        }}
+                        className={`py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-1 ${
+                          profile.teamId === t.id 
+                            ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white' 
+                            : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white'
+                        }`}
+                      >
+                        {profile.teamId === t.id ? (
+                          <>
+                            <X size={12} />
+                            Desvincular
+                          </>
+                        ) : (
+                          <>
+                            <LinkIcon size={12} />
+                            Vincular-me
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
