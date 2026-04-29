@@ -49,7 +49,7 @@ import {
   UserProfile, 
   Team 
 } from '../../types';
-import { getTeamData } from '../../lib/teams';
+import { getTeamData, getTeamMembers } from '../../lib/teams';
 import { formatCurrency } from '../../utils/masks';
 import { StatCard } from './StatCard';
 import { FilterButton } from './FilterButton';
@@ -83,12 +83,26 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
   const [selectedTeamId, setSelectedTeamId] = useState<string | 'all'>(profile.teamId || 'all');
   const [managedTeamsData, setManagedTeamsData] = useState<Team[]>([]);
   
+  const [selectedMemberId, setSelectedMemberId] = useState<string | 'all'>('all');
+  const [currentTeamMembers, setCurrentTeamMembers] = useState<UserProfile[]>([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
   const [selectedClientCpf, setSelectedClientCpf] = useState<string | null>(null);
   const [clientHistory, setClientHistory] = useState<Agreement[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Load Members when team changes
+  useEffect(() => {
+    if (selectedTeamId !== 'all') {
+      getTeamMembers(selectedTeamId).then(setCurrentTeamMembers);
+      setSelectedMemberId('all');
+    } else {
+      setCurrentTeamMembers([]);
+      setSelectedMemberId('all');
+    }
+  }, [selectedTeamId]);
 
   // Load Managed Teams Info
   useEffect(() => {
@@ -169,13 +183,21 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
   }, [selectedTeamId, profile.managedTeams]);
 
   // Filtering Logic
-  const displayAgreements = useMemo(() => {
+  const memberFilteredAgreements = useMemo(() => {
     let filtered = agreements;
     
     // Filter by View Mode
     if (viewMode === 'personal') {
       filtered = filtered.filter(a => a.operatorId === profile.uid);
+    } else if (selectedMemberId !== 'all') {
+      filtered = filtered.filter(a => a.operatorId === selectedMemberId);
     }
+    
+    return filtered;
+  }, [agreements, viewMode, profile.uid, selectedMemberId]);
+
+  const displayAgreements = useMemo(() => {
+    let filtered = memberFilteredAgreements;
     
     // Filter by Search
     if (searchTerm) {
@@ -192,12 +214,12 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     }
     
     return filtered;
-  }, [agreements, viewMode, profile.uid, searchTerm, filterStatus]);
+  }, [memberFilteredAgreements, searchTerm, filterStatus]);
 
-  // Stats calculation based on display data
+  // Stats calculation based on member data (ignores search and status filter)
   const stats: DashboardStats = useMemo(() => {
-    const totalProjected = displayAgreements.reduce((acc, curr) => acc + curr.value, 0);
-    const totalPaid = displayAgreements
+    const totalProjected = memberFilteredAgreements.reduce((acc, curr) => acc + curr.value, 0);
+    const totalPaid = memberFilteredAgreements
       .filter(a => a.status === AgreementStatus.PAID)
       .reduce((acc, curr) => acc + curr.value, 0);
     
@@ -206,13 +228,13 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
       totalPaid,
       effectivenessRate: (totalPaid / (monthlyGoal || 1)) * 100,
       counts: {
-        total: displayAgreements.length,
-        paid: displayAgreements.filter(a => a.status === AgreementStatus.PAID).length,
-        waiting: displayAgreements.filter(a => a.status === AgreementStatus.WAITING).length,
-        broken: displayAgreements.filter(a => a.status === AgreementStatus.BROKEN).length,
+        total: memberFilteredAgreements.length,
+        paid: memberFilteredAgreements.filter(a => a.status === AgreementStatus.PAID).length,
+        waiting: memberFilteredAgreements.filter(a => a.status === AgreementStatus.WAITING).length,
+        broken: memberFilteredAgreements.filter(a => a.status === AgreementStatus.BROKEN).length,
       }
     };
-  }, [displayAgreements, monthlyGoal]);
+  }, [memberFilteredAgreements, monthlyGoal]);
 
   // Chart Data
   const chartData = useMemo(() => [
@@ -566,6 +588,54 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                     Copiar Convite
                   </button>
                 </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Navegação por Membros da Equipe */}
+        {selectedTeamId !== 'all' && viewMode === 'team' && currentTeamMembers.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Filtrar por Operador</h3>
+              {selectedMemberId !== 'all' && (
+                <button 
+                  onClick={() => setSelectedMemberId('all')}
+                  className="text-[10px] font-bold text-primary hover:text-sky-400 uppercase transition-colors"
+                >
+                  Limpar Filtro
+                </button>
+              )}
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <button
+                onClick={() => setSelectedMemberId('all')}
+                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                  selectedMemberId === 'all' 
+                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                    : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-600'
+                }`}
+              >
+                <Users size={14} />
+                <span className="text-xs font-bold">Toda a Equipe</span>
+              </button>
+              {currentTeamMembers.map(member => (
+                <button
+                  key={member.uid}
+                  onClick={() => setSelectedMemberId(member.uid)}
+                  className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                    selectedMemberId === member.uid 
+                      ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                      : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-600'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    selectedMemberId === member.uid ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'
+                  }`}>
+                    {member.displayName[0].toUpperCase()}
+                  </div>
+                  <span className="text-xs font-bold whitespace-nowrap">{member.displayName.split(' ')[0]}</span>
+                </button>
               ))}
             </div>
           </section>
