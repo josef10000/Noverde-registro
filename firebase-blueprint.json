@@ -24,6 +24,7 @@
       "type": "object",
       "properties": {
         "monthlyGoal": { "type": "number" },
+        "effectivenessGoal": { "type": "number" },
         "updatedAt": { "type": "string", "format": "date-time" }
       }
     }

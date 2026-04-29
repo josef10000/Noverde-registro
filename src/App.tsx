@@ -1,23 +1,28 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  Users, 
-  CheckCircle2, 
-  Clock, 
-  AlertCircle, 
-  Search, 
-  Plus, 
-  Check, 
-  X,
-  Phone,
-  MessageSquare,
-  MessageCircle,
-  TrendingUp,
-  DollarSign,
   PieChart,
   Loader2,
   Trash2,
   Edit3,
-  Target
+  Target,
+  Mail,
+  Lock,
+  LogIn,
+  LogOut,
+  Chrome,
+  Phone,
+  MessageSquare,
+  MessageCircle,
+  Plus,
+  Check,
+  X,
+  TrendingUp,
+  DollarSign,
+  CheckCircle2,
+  AlertCircle,
+  Search,
+  Clock,
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -32,7 +37,17 @@ import {
   getDocFromServer,
   where
 } from 'firebase/firestore';
-import { db } from './lib/firebase';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  sendPasswordResetEmail, 
+  signInWithPopup, 
+  GoogleAuthProvider,
+  signOut,
+  User
+} from 'firebase/auth';
+import { auth, db } from './lib/firebase';
 import { 
   Agreement, 
   AgreementOrigin, 
@@ -144,6 +159,149 @@ const FilterButton = ({
   </button>
 );
 
+const LoginPage = ({ onAuthSuccess }: { onAuthSuccess: () => void }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert('E-mail de recuperação enviado!');
+      setIsForgotPassword(false);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-[#020617]">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md glass-card p-8 rounded-3xl space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-white">Recuperar Senha</h2>
+            <p className="text-slate-500 text-sm">Digite seu e-mail para receber o link de recuperação.</p>
+          </div>
+          <form onSubmit={handleResetPassword} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">E-mail</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-sky-400" size={18} />
+                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 pl-12 pr-4 py-3 rounded-xl focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 outline-none transition-all text-slate-200" placeholder="seu@email.com" />
+              </div>
+            </div>
+            <button disabled={loading} type="submit" className="w-full bg-sky-500 py-4 rounded-xl font-bold text-white hover:bg-sky-400 transition-all flex items-center justify-center gap-2">
+              {loading ? <Loader2 className="animate-spin" size={20} /> : 'Enviar E-mail'}
+            </button>
+            <button type="button" onClick={() => setIsForgotPassword(false)} className="w-full text-slate-500 text-sm hover:text-white transition-colors">Voltar para entrar</button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-[#020617]">
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md glass-card p-8 rounded-3xl space-y-8 shadow-2xl">
+        <div className="text-center flex flex-col items-center gap-4">
+          <div className="bg-sky-500 p-4 rounded-2xl shadow-xl shadow-sky-500/20">
+            <PieChart size={32} className="text-white" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-3xl font-bold text-white">RNV Gestão</h2>
+            <p className="text-slate-500 text-sm">{isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}</p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-rose-400 text-xs font-medium">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleAuth} className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">E-mail</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-sky-400" size={18} />
+                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 pl-12 pr-4 py-3 rounded-xl focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 outline-none transition-all text-slate-200" placeholder="seu@email.com" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center px-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Senha</label>
+                {isLogin && <button type="button" onClick={() => setIsForgotPassword(true)} className="text-[10px] font-bold text-sky-500 uppercase hover:text-sky-400">Esqueci a senha</button>}
+              </div>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-sky-400" size={18} />
+                <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 pl-12 pr-4 py-3 rounded-xl focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 outline-none transition-all text-slate-200" placeholder="••••••••" />
+              </div>
+            </div>
+          </div>
+
+          <button disabled={loading} type="submit" className="w-full bg-sky-500 py-4 rounded-xl font-bold text-white hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/10 flex items-center justify-center gap-2">
+            {loading ? <Loader2 className="animate-spin" size={20} /> : (isLogin ? 'Entrar' : 'Cadastrar')}
+            <LogIn size={20} />
+          </button>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center px-2">
+            <div className="w-full border-t border-slate-800"></div>
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-[#020617] px-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ou continuar com</span>
+          </div>
+        </div>
+
+        <button onClick={handleGoogleSignIn} className="w-full bg-slate-900 border border-slate-800 py-4 rounded-xl font-bold text-slate-200 hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
+          <Chrome size={20} />
+          Google
+        </button>
+
+        <p className="text-center text-sm text-slate-500">
+          {isLogin ? 'Ainda não tem conta?' : 'Já possui conta?'}
+          <button onClick={() => setIsLogin(!isLogin)} className="ml-2 font-bold text-sky-500 hover:text-sky-400">{isLogin ? 'Cadastre-se' : 'Faça login'}</button>
+        </p>
+      </motion.div>
+    </div>
+  );
+};
 const OriginBadge = ({ origin }: { origin: AgreementOrigin }) => {
   const configs = {
     [AgreementOrigin.PHONE]: { icon: Phone, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', label: 'Telefone' },
@@ -162,8 +320,37 @@ const OriginBadge = ({ origin }: { origin: AgreementOrigin }) => {
 };
 
 export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <Loader2 className="animate-spin text-sky-500" size={48} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage onAuthSuccess={() => {}} />;
+  }
+
+  return <Dashboard agreementsData={agreements} user={user} />;
+}
+
+function Dashboard({ agreementsData, user }: { agreementsData: Agreement[], user: User }) {
+  const [agreements, setAgreements] = useState<Agreement[]>(agreementsData);
   const [monthlyGoal, setMonthlyGoal] = useState<number>(50000); // Default goal
+  const [effectivenessGoal, setEffectivenessGoal] = useState<number>(85); // Target percentage
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | AgreementStatus>('all');
@@ -184,7 +371,9 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, 'settings', 'global'), (snapshot) => {
       if (snapshot.exists()) {
-        setMonthlyGoal(snapshot.data().monthlyGoal);
+        const data = snapshot.data();
+        setMonthlyGoal(data.monthlyGoal || 50000);
+        setEffectivenessGoal(data.effectivenessGoal || 85);
       }
     });
     return () => unsubscribe();
@@ -312,15 +501,29 @@ export default function App() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const newGoal = parseFloat(formData.get('goal') as string);
+    const newEffGoal = parseFloat(formData.get('effGoal') as string);
     try {
       await setDoc(doc(db, 'settings', 'global'), { 
         monthlyGoal: newGoal,
+        effectivenessGoal: newEffGoal,
         updatedAt: new Date().toISOString()
       });
       setIsGoalModalOpen(false);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, 'settings/global');
     }
+  };
+
+  const getEffectivenessColor = (rate: number, goal: number) => {
+    if (rate >= goal) return 'text-emerald-400';
+    if (rate >= goal * 0.75) return 'text-amber-400'; // "Perto"
+    return 'text-rose-400'; // "Longe"
+  };
+
+  const getEffectivenessBarColor = (rate: number, goal: number) => {
+    if (rate >= goal) return 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]';
+    if (rate >= goal * 0.75) return 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]';
+    return 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]';
   };
 
   const handleAddAgreement = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -359,17 +562,30 @@ export default function App() {
               <PieChart size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white leading-none">Gestor de Cobranças</h1>
+              <h1 className="text-xl font-bold tracking-tight text-white leading-none">RNV Gestão</h1>
               <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Dashboard Operacional</p>
             </div>
           </div>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-sky-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/10 active:scale-95"
-          >
-            <Plus size={20} />
-            Novo Acordo
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-col items-end mr-2">
+              <span className="text-xs font-bold text-white">{user.displayName || user.email?.split('@')[0]}</span>
+              <span className="text-[10px] text-slate-500 font-medium">{user.email}</span>
+            </div>
+            <button 
+              onClick={() => signOut(auth)}
+              className="p-2.5 text-slate-500 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl transition-all border border-transparent hover:border-rose-500/20"
+              title="Sair"
+            >
+              <LogOut size={20} />
+            </button>
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-sky-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/10 active:scale-95"
+            >
+              <Plus size={20} />
+              <span className="hidden sm:inline">Novo Acordo</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -403,14 +619,16 @@ export default function App() {
             </button>
             <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Taxa de Efetividade</p>
             <div className="mt-4 flex items-end justify-between">
-              <h3 className="text-3xl font-bold text-white">{stats.effectivenessRate.toFixed(1)}%</h3>
-              <p className="text-xs font-medium text-slate-500 mb-1">Cota: {formatCurrency(monthlyGoal)}</p>
+              <h3 className={`text-3xl font-bold transition-colors duration-500 ${getEffectivenessColor(stats.effectivenessRate, effectivenessGoal)}`}>
+                {stats.effectivenessRate.toFixed(1)}%
+              </h3>
+              <p className="text-xs font-medium text-slate-500 mb-1">Meta: {effectivenessGoal}% | Cota: {formatCurrency(monthlyGoal)}</p>
             </div>
             <div className="mt-3 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(stats.effectivenessRate, 100)}%` }}
-                className="h-full bg-sky-500 rounded-full shadow-[0_0_10px_rgba(56,189,248,0.5)]"
+                className={`h-full rounded-full transition-colors duration-500 ${getEffectivenessBarColor(stats.effectivenessRate, effectivenessGoal)}`}
               />
             </div>
           </motion.div>
@@ -803,20 +1021,33 @@ export default function App() {
                 </button>
               </div>
               <form onSubmit={handleUpdateGoal} className="p-8 space-y-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Valor da Meta (R$)</label>
-                  <input 
-                    name="goal"
-                    type="number" 
-                    defaultValue={monthlyGoal}
-                    className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-slate-200"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Cota Mensal (R$)</label>
+                    <input 
+                      required
+                      name="goal"
+                      type="number" 
+                      defaultValue={monthlyGoal}
+                      className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-slate-200"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Meta de Efetividade (%)</label>
+                    <input 
+                      required
+                      name="effGoal"
+                      type="number" 
+                      defaultValue={effectivenessGoal}
+                      className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-slate-200"
+                    />
+                  </div>
                 </div>
                 <button 
                   type="submit"
                   className="w-full px-6 py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-400 transition-colors shadow-lg shadow-sky-500/20"
                 >
-                  Salvar Meta
+                  Atualizar Metas
                 </button>
               </form>
             </motion.div>
