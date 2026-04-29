@@ -1,50 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Helper seguro para pegar dados do usuário
-    function getUserData() {
-      let path = /databases/$(database)/documents/users/$(request.auth.uid);
-      return exists(path) ? get(path).data : {"role": "none", "teamId": "none", "managedTeams": []};
-    }
-
-    // Perfil de Usuário - Permite que o próprio usuário gerencie seu perfil
-    match /users/{userId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && request.auth.uid == userId;
-    }
-
-    // Equipes - Qualquer um logado pode criar, mas apenas o supervisor edita
-    match /teams/{teamId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && (resource.data.supervisorId == request.auth.uid);
-    }
-
-    // Acordos - Regras de isolamento por time e operador
-    match /agreements/{agreementId} {
-      allow read: if isSignedIn() && (
-        resource.data.operatorId == request.auth.uid ||
-        getUserData().role == 'supervisor' && getUserData().teamId == resource.data.teamId ||
-        (getUserData().managedTeams != null && getUserData().managedTeams.hasAny([resource.data.teamId]))
-      );
-      
-      allow create: if isSignedIn();
-      
-      allow update, delete: if isSignedIn() && (
-        resource.data.operatorId == request.auth.uid ||
-        getUserData().role == 'supervisor' && getUserData().teamId == resource.data.teamId
-      );
-    }
-
-    // Configurações
-    match /settings/{settingId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+    // Versão de depuração: Permite tudo para usuários logados
+    // Recomendo restringir após o onboarding inicial
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
