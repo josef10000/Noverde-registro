@@ -13,7 +13,8 @@ import {
   Check,
   User as UserIcon,
   UserPlus,
-  Users
+  Users,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
