@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "Agreement": {
+      "title": "Agreement",
+      "description": "Represents a collection/settlement agreement with a client.",
+      "type": "object",
+      "properties": {
+        "clientName": { "type": "string", "description": "Full name of the client" },
+        "clientCpf": { "type": "string", "description": "CPF of the client" },
+        "origin": { "type": "string", "enum": ["telefone", "chat", "whatsapp"] },
+        "dueDate": { "type": "string", "format": "date", "description": "Payment due date" },
+        "value": { "type": "number", "description": "Total value of the agreement" },
+        "status": { "type": "string", "enum": ["pago", "aguardando", "quebrado"] },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "paidAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientCpf", "origin", "dueDate", "value", "status", "createdAt"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "App settings like monthly goals.",
+      "type": "object",
+      "properties": {
+        "monthlyGoal": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/agreements/{agreementId}": {
+      "schema": "Agreement",
+      "description": "List of all settlement agreements."
+    },
+    "/settings/{settingId}": {
+      "schema": "Setting",
+      "description": "Global or user-specific settings."
+    }
+  }
+}

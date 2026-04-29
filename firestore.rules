@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper for basic ID validation
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for Agreement
+    function isValidAgreement(data) {
+      return data.keys().hasAll(['clientCpf', 'origin', 'dueDate', 'value', 'status', 'createdAt']) &&
+             data.clientCpf is string && data.clientCpf.size() <= 20 &&
+             data.origin in ['telefone', 'chat', 'whatsapp'] &&
+             data.status in ['pago', 'aguardando', 'quebrado'] &&
+             data.value is number && data.value >= 0 &&
+             data.dueDate is string &&
+             data.createdAt is string;
+    }
+
+    match /agreements/{agreementId} {
+      allow list, get: if true;
+      allow create: if isValidId(agreementId) && isValidAgreement(incoming());
+      allow update: if isValidId(agreementId) && isValidAgreement(incoming());
+      allow delete: if true; 
+    }
+
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+  }
+}
