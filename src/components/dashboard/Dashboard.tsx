@@ -38,7 +38,8 @@ import {
 } from 'recharts';
 
 import { auth, db } from '../../lib/firebase';
-import { Agreement, AgreementStatus, AgreementOrigin, DashboardStats } from '../../types';
+import { UserProfile, Team } from '../../types';
+import { getTeamData } from '../../lib/teams';
 import { formatCurrency } from '../../utils/masks';
 import { StatCard } from './StatCard';
 import { FilterButton } from './FilterButton';
@@ -46,12 +47,14 @@ import { OriginBadge } from './OriginBadge';
 import { AgreementModal } from '../modals/AgreementModal';
 import { GoalModal } from '../modals/GoalModal';
 import { HistoryModal } from '../modals/HistoryModal';
+import { UserPlus } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
+  profile: UserProfile;
 }
 
-export const Dashboard = ({ user }: DashboardProps) => {
+export const Dashboard = ({ user, profile }: DashboardProps) => {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [monthlyGoal, setMonthlyGoal] = useState<number>(50000);
   const [effectivenessGoal, setEffectivenessGoal] = useState<number>(85);
@@ -61,6 +64,8 @@ export const Dashboard = ({ user }: DashboardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAgreement, setEditingAgreement] = useState<Agreement | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'personal' | 'team'>(profile.role === 'supervisor' ? 'team' : 'personal');
+  const [team, setTeam] = useState<Team | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -69,35 +74,77 @@ export const Dashboard = ({ user }: DashboardProps) => {
   const [clientHistory, setClientHistory] = useState<Agreement[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Load Settings
+  // Load Team and Settings
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, 'settings', 'global'), (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        setMonthlyGoal(data.monthlyGoal || 50000);
-        setEffectivenessGoal(data.effectivenessGoal || 85);
+    const loadData = async () => {
+      if (profile.teamId) {
+        // Load Settings specific to team or global
+        const settingsRef = doc(db, 'settings', profile.teamId);
+        const unsubscribeSettings = onSnapshot(settingsRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            setMonthlyGoal(data.monthlyGoal || 50000);
+            setEffectivenessGoal(data.effectivenessGoal || 85);
+          }
+        });
+
+        // Load Team Info
+        const teamData = await getTeamData(profile.teamId);
+        setTeam(teamData);
+
+        // Firestore Subscription for Agreements in this Team
+        const q = query(
+          collection(db, 'agreements'), 
+          where('teamId', '==', profile.teamId),
+          orderBy('createdAt', 'desc')
+        );
+        
+        const unsubscribeAgreements = onSnapshot(q, (snapshot) => {
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Agreement));
+          setAgreements(data);
+          setIsLoading(false);
+        });
+
+        return () => {
+          unsubscribeSettings();
+          unsubscribeAgreements();
+        };
       }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Firestore Subscription
-  useEffect(() => {
-    const q = query(collection(db, 'agreements'), orderBy('createdAt', 'desc'));
+    };
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Agreement));
-      setAgreements(data);
-      setIsLoading(false);
-    });
+    return loadData();
+  }, [profile.teamId]);
 
-    return () => unsubscribe();
-  }, []);
+  // Filtering Logic
+  const displayAgreements = useMemo(() => {
+    let filtered = agreements;
+    
+    // Filter by View Mode
+    if (viewMode === 'personal') {
+      filtered = filtered.filter(a => a.operatorId === profile.uid);
+    }
+    
+    // Filter by Search
+    if (searchTerm) {
+      filtered = filtered.filter(agreement => 
+        agreement.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agreement.clientCpf.includes(searchTerm) ||
+        (agreement.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    // Filter by Status
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(a => a.status === filterStatus);
+    }
+    
+    return filtered;
+  }, [agreements, viewMode, profile.uid, searchTerm, filterStatus]);
 
-  // Stats calculation
+  // Stats calculation based on display data
   const stats: DashboardStats = useMemo(() => {
-    const totalProjected = agreements.reduce((acc, curr) => acc + curr.value, 0);
-    const totalPaid = agreements
+    const totalProjected = displayAgreements.reduce((acc, curr) => acc + curr.value, 0);
+    const totalPaid = displayAgreements
       .filter(a => a.status === AgreementStatus.PAID)
       .reduce((acc, curr) => acc + curr.value, 0);
     
@@ -106,13 +153,13 @@ export const Dashboard = ({ user }: DashboardProps) => {
       totalPaid,
       effectivenessRate: (totalPaid / (monthlyGoal || 1)) * 100,
       counts: {
-        total: agreements.length,
-        paid: agreements.filter(a => a.status === AgreementStatus.PAID).length,
-        waiting: agreements.filter(a => a.status === AgreementStatus.WAITING).length,
-        broken: agreements.filter(a => a.status === AgreementStatus.BROKEN).length,
+        total: displayAgreements.length,
+        paid: displayAgreements.filter(a => a.status === AgreementStatus.PAID).length,
+        waiting: displayAgreements.filter(a => a.status === AgreementStatus.WAITING).length,
+        broken: displayAgreements.filter(a => a.status === AgreementStatus.BROKEN).length,
       }
     };
-  }, [agreements, monthlyGoal]);
+  }, [displayAgreements, monthlyGoal]);
 
   // Chart Data
   const chartData = useMemo(() => [
@@ -121,20 +168,7 @@ export const Dashboard = ({ user }: DashboardProps) => {
     { name: 'Pendente', value: Math.max(0, stats.totalProjected - stats.totalPaid), color: '#f59e0b' }
   ], [monthlyGoal, stats]);
 
-  // Filtering
-  const filteredAgreements = useMemo(() => {
-    setCurrentPage(1);
-    return agreements.filter(agreement => {
-      const matchesSearch = 
-        agreement.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        agreement.clientCpf.includes(searchTerm) ||
-        (agreement.email?.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesFilter = filterStatus === 'all' || agreement.status === filterStatus;
-      
-      return matchesSearch && matchesFilter;
-    });
-  }, [agreements, searchTerm, filterStatus]);
+  const filteredAgreements = displayAgreements;
 
   const paginatedAgreements = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -183,8 +217,9 @@ export const Dashboard = ({ user }: DashboardProps) => {
   };
 
   const handleUpdateGoal = async (newGoal: number, newEffGoal: number) => {
+    if (!profile.teamId) return;
     try {
-      await setDoc(doc(db, 'settings', 'global'), { 
+      await setDoc(doc(db, 'settings', profile.teamId), { 
         monthlyGoal: newGoal,
         effectivenessGoal: newEffGoal,
         updatedAt: new Date().toISOString()
@@ -196,11 +231,14 @@ export const Dashboard = ({ user }: DashboardProps) => {
   };
 
   const handleAddOrEditAgreement = async (data: any) => {
+    if (!profile.teamId) return;
     const id = editingAgreement?.id || Math.random().toString(36).substr(2, 9);
     const agreementData = {
       ...data,
       status: (editingAgreement?.status || AgreementStatus.WAITING) as AgreementStatus,
       createdAt: editingAgreement?.createdAt || new Date().toISOString(),
+      operatorId: editingAgreement?.operatorId || profile.uid,
+      teamId: profile.teamId
     };
 
     try {
@@ -232,10 +270,38 @@ export const Dashboard = ({ user }: DashboardProps) => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {profile.role === 'supervisor' && (
+              <div className="bg-slate-800/50 p-1 rounded-xl flex gap-1 mr-2">
+                <button 
+                  onClick={() => setViewMode('personal')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'personal' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  Pessoal
+                </button>
+                <button 
+                  onClick={() => setViewMode('team')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'team' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  Equipe
+                </button>
+              </div>
+            )}
             <div className="hidden md:flex flex-col items-end mr-2">
-              <span className="text-xs font-bold text-white">{user.displayName || user.email?.split('@')[0]}</span>
-              <span className="text-[10px] text-slate-500 font-medium">{user.email}</span>
+              <span className="text-xs font-bold text-white">{profile.displayName}</span>
+              <span className="text-[10px] text-slate-500 font-medium">{team?.name || 'Carregando time...'}</span>
             </div>
+            <button 
+              onClick={() => {
+                if (team) {
+                  navigator.clipboard.writeText(team.inviteToken);
+                  alert('Código de convite copiado para a área de transferência!');
+                }
+              }}
+              className="p-2.5 text-slate-500 hover:bg-emerald-500/10 hover:text-emerald-400 rounded-xl transition-all border border-transparent"
+              title="Copiar Código de Convite"
+            >
+              <UserPlus size={20} />
+            </button>
             <button 
               onClick={() => signOut(auth)}
               className="p-2.5 text-slate-500 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl transition-all border border-transparent hover:border-rose-500/20"

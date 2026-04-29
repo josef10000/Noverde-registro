@@ -1,32 +1,52 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 export enum AgreementStatus {
-  PAID = 'pago',
-  WAITING = 'aguardando',
-  BROKEN = 'quebrado',
+  WAITING = 'waiting',
+  PAID = 'paid',
+  BROKEN = 'broken'
 }
 
 export enum AgreementOrigin {
-  PHONE = 'telefone',
-  CHAT = 'chat',
+  URA = 'ura',
   WHATSAPP = 'whatsapp',
+  SMS = 'sms',
+  SITE = 'site',
+  RECLAME_AQUI = 'reclame_aqui',
+  OUTROS = 'outros'
+}
+
+export type UserRole = 'supervisor' | 'member';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: UserRole;
+  teamId?: string;
+  managedTeams?: string[]; // Para supervisores que gerenciam múltiplos times
+  createdAt: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  supervisorId: string;
+  inviteToken: string;
+  createdAt: string;
 }
 
 export interface Agreement {
   id: string;
   clientName: string;
   clientCpf: string;
-  origin: AgreementOrigin;
-  dueDate: string;
   value: number;
+  dueDate: string;
   status: AgreementStatus;
-  phone?: string;
+  origin: AgreementOrigin;
   email?: string;
-  paidAt?: string;
+  phone?: string;
+  operatorId: string; // Quem registrou
+  teamId: string;     // A qual equipe pertence
   createdAt: string;
+  paidAt?: string;
 }
 
 export interface DashboardStats {
