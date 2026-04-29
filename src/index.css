@@ -9,6 +9,7 @@
   --color-primary: var(--primary-color, #38bdf8);
   --color-dashboard-bg: var(--bg-color, #020617);
   --color-dashboard-surface: var(--surface-color, #0f172a);
+  --color-dashboard-border: #1e293b;
 }
 
 :root {
