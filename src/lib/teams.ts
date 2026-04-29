@@ -7,7 +7,9 @@ import {
   where, 
   getDocs, 
   updateDoc, 
-  arrayUnion 
+  arrayUnion,
+  arrayRemove,
+  deleteDoc
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Team, UserProfile, UserRole } from '../types';
@@ -24,10 +26,8 @@ export const createTeam = async (uid: string, userEmail: string, teamName: strin
     createdAt: new Date().toISOString()
   };
 
-  // 1. Criar a equipe
   await setDoc(doc(db, 'teams', teamId), teamData);
 
-  // 2. Atualizar o perfil do usuário
   const userRef = doc(db, 'users', uid);
   const userSnap = await getDoc(userRef);
 
@@ -96,4 +96,27 @@ export const getTeamData = async (teamId: string): Promise<Team | null> => {
     return docSnap.data() as Team;
   }
   return null;
+};
+
+export const deleteTeam = async (uid: string, teamId: string): Promise<void> => {
+  await deleteDoc(doc(db, 'teams', teamId));
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, {
+    managedTeams: arrayRemove(teamId)
+  });
+};
+
+export const getTeamMembers = async (teamId: string): Promise<UserProfile[]> => {
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('teamId', '==', teamId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data() as UserProfile);
+};
+
+export const removeTeamMember = async (uid: string): Promise<void> => {
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, {
+    teamId: null,
+    role: 'member'
+  });
 };

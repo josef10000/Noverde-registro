@@ -43,6 +43,14 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (profile?.theme) {
+      document.documentElement.setAttribute('data-theme', profile.theme);
+    } else {
+      document.documentElement.setAttribute('data-theme', 'sky');
+    }
+  }, [profile?.theme]);
+
   const refreshProfile = async () => {
     if (user) {
       const userProfile = await getUserProfile(user.uid);

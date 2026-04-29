@@ -25,6 +25,7 @@ export interface UserProfile {
   teamId?: string;
   managedTeams?: string[]; // Para supervisores que gerenciam múltiplos times
   jobTitle?: string;
+  theme?: 'dark' | 'sky' | 'purple';
   createdAt: string;
 }
 

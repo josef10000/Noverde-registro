@@ -314,7 +314,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
       <header className="bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="bg-sky-500 text-white p-2 rounded-lg shadow-lg shadow-sky-500/20 cursor-pointer" onClick={onSettingsClick}>
+            <div className="bg-primary text-white p-2 rounded-lg shadow-lg shadow-primary/20 cursor-pointer" onClick={onSettingsClick}>
               <PieIcon size={24} />
             </div>
             <div className="flex-1">
@@ -343,13 +343,13 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
               <div className="bg-slate-800/50 p-1 rounded-xl flex gap-1 mr-2">
                 <button 
                   onClick={() => setViewMode('personal')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'personal' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'personal' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   Pessoal
                 </button>
                 <button 
                   onClick={() => setViewMode('team')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'team' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'team' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   Equipe
                 </button>
@@ -364,7 +364,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                 <span className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">{profile.displayName}</span>
                 <span className="text-[9px] text-slate-500 font-medium uppercase tracking-tighter">{profile.jobTitle || 'Operador'}</span>
               </div>
-              <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-500 border border-sky-500/20">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                 <UserIcon size={16} />
               </div>
             </div>
@@ -396,7 +396,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             <button 
               onClick={() => setIsModalOpen(true)}
               disabled={selectedTeamId === 'all'}
-              className="flex items-center gap-2 bg-sky-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/10 active:scale-95 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-400 transition-all shadow-lg shadow-primary/10 active:scale-95 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
             >
               <Plus size={20} />
               <span className="hidden sm:inline">Novo Acordo</span>
@@ -412,7 +412,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
               title="Total Projetado" 
               value={formatCurrency(stats.totalProjected)} 
               icon={DollarSign} 
-              colorClass="bg-blue-500/10 text-blue-400" 
+              colorClass="bg-primary/10 text-primary" 
             />
             <StatCard 
               title="Efetivamente Pago" 
@@ -428,7 +428,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             >
               <button 
                 onClick={() => setIsGoalModalOpen(true)}
-                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-sky-400 opacity-0 group-hover:opacity-100 transition-all bg-slate-900/50 rounded-lg border border-slate-800"
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-all bg-slate-900/50 rounded-lg border border-slate-800"
               >
                 <Target size={14} />
               </button>
@@ -537,20 +537,20 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                 <div 
                   key={t.id}
                   onClick={() => setSelectedTeamId(t.id)}
-                  className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl hover:border-sky-500/50 transition-all cursor-pointer group"
+                  className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl hover:border-primary/50 transition-all cursor-pointer group"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="font-bold text-white group-hover:text-sky-400 transition-colors">{t.name}</h3>
                       <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Meta: {formatCurrency(t.monthlyGoal)}</p>
                     </div>
-                    <div className="bg-sky-500/10 text-sky-400 p-2 rounded-lg">
+                    <div className="bg-primary/10 text-sky-400 p-2 rounded-lg">
                       <Target size={16} />
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex-1 bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-sky-500 h-full rounded-full" style={{ width: '0%' }} /> 
+                      <div className="bg-primary h-full rounded-full" style={{ width: '0%' }} /> 
                     </div>
                     <span className="text-xs font-bold text-slate-300">0%</span>
                   </div>
@@ -578,7 +578,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
           <input 
             type="text" 
             placeholder="Buscar por Nome, CPF ou E-mail..." 
-            className="w-full bg-slate-950 border border-slate-800 pl-12 pr-6 py-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500/50 transition-all text-slate-200 placeholder:text-slate-500 outline-none"
+            className="w-full bg-slate-950 border border-slate-800 pl-12 pr-6 py-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all text-slate-200 placeholder:text-slate-500 outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -601,7 +601,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">
                       <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="animate-spin text-sky-500" size={32} />
+                        <Loader2 className="animate-spin text-primary" size={32} />
                         <span>Carregando acordos...</span>
                       </div>
                     </td>
@@ -663,7 +663,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                                   setEditingAgreement(agreement);
                                   setIsModalOpen(true);
                                 }}
-                                className="p-2 text-slate-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-all"
+                                className="p-2 text-slate-500 hover:text-sky-400 hover:bg-primary/10 rounded-lg transition-all"
                                 title="Editar"
                               >
                                 <Edit3 size={16} />
