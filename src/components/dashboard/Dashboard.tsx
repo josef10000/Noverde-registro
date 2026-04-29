@@ -715,13 +715,13 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                     <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
                       <p className="text-[8px] text-slate-500 uppercase font-black tracking-tighter">Hoje</p>
                       <p className="text-sm font-bold text-sky-400">
-                        {agreements.filter(a => a.teamId === t.id && new Date(a.createdAt) >= new Date().setHours(0,0,0,0)).length}
+                        {agreements.filter(a => a.teamId === t.id && new Date(a.createdAt).getTime() >= new Date().setHours(0,0,0,0)).length}
                       </p>
                     </div>
                     <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
                       <p className="text-[8px] text-slate-500 uppercase font-black tracking-tighter">Mês</p>
                       <p className="text-sm font-bold text-white">
-                        {agreements.filter(a => a.teamId === t.id && new Date(a.createdAt) >= new Date(new Date().getFullYear(), new Date().getMonth(), 1)).length}
+                        {agreements.filter(a => a.teamId === t.id && new Date(a.createdAt).getTime() >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()).length}
                       </p>
                     </div>
                   </div>
