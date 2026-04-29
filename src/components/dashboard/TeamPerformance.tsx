@@ -120,7 +120,7 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
         </div>
       </section>
 
-      {/* Daily Productivity Table */}
+      {/* Daily Productivity Table - Request Format */}
       <section>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-primary/10 text-primary rounded-lg">
@@ -129,58 +129,53 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
           <h2 className="text-xl font-bold text-white">Produtividade Diária (Pagos)</h2>
         </div>
 
-        <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden">
+        <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-slate-950/50">
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-800 sticky left-0 bg-slate-950 z-10">
-                    Membro da Equipe
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] font-black text-white uppercase bg-sky-600/40 border-r border-slate-800 sticky left-0 z-20 min-w-[200px]">
+                    PAGAMENTO TOTAL
                   </th>
                   {uniqueDates.map(date => (
-                    <th key={date} className="px-4 py-4 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-800 min-w-[100px]">
+                    <th key={date} className="px-4 py-3 text-center text-[10px] font-bold text-slate-300 uppercase bg-slate-800/50 border-r border-slate-700/30">
                       {formatDate(date)}
                     </th>
                   ))}
-                  <th className="px-6 py-4 text-right text-[10px] font-bold text-white uppercase tracking-wider border-b border-slate-800 bg-primary/20">
-                    Total Acumulado
+                  <th className="px-4 py-3 text-right text-[11px] font-black text-white uppercase bg-slate-800 border-l border-slate-700 sticky right-0 z-10">
+                    Total
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-slate-300">
                 {ranking.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-800/30 transition-colors group">
-                    <td className="px-6 py-4 border-b border-slate-800/50 sticky left-0 bg-slate-900 group-hover:bg-slate-800 transition-colors z-10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                          {row.name[0]}
-                        </div>
-                        <span className="text-sm font-bold text-slate-200">{row.name}</span>
-                      </div>
+                  <tr key={row.id} className="hover:bg-slate-800/30 border-b border-slate-800/50">
+                    <td className="px-4 py-2.5 font-bold text-xs bg-slate-950 border-r border-slate-800 sticky left-0 z-10 group-hover:bg-slate-900 transition-colors">
+                      {row.name}
                     </td>
                     {uniqueDates.map(date => (
-                      <td key={date} className="px-4 py-4 text-center border-b border-slate-800/50 text-xs font-medium text-slate-400">
-                        {row.daily[date] ? formatCurrency(row.daily[date]) : '-'}
+                      <td key={date} className="px-4 py-2.5 text-center text-[11px] font-medium border-r border-slate-800/30">
+                        {row.daily[date] ? formatCurrency(row.daily[date]) : 'R$ 0,00'}
                       </td>
                     ))}
-                    <td className="px-6 py-4 text-right border-b border-slate-800/50 text-sm font-bold text-emerald-400 bg-emerald-500/5">
+                    <td className="px-4 py-2.5 text-right font-black text-xs text-white bg-slate-900 sticky right-0 z-10 border-l border-slate-800">
                       {formatCurrency(row.paid)}
                     </td>
                   </tr>
                 ))}
-                {/* Footer Totals */}
-                <tr className="bg-slate-950/80">
-                  <td className="px-6 py-4 font-bold text-white text-xs uppercase tracking-widest sticky left-0 bg-slate-950">
-                    Total Diário
+                {/* Total Footer Row */}
+                <tr className="bg-sky-950/20">
+                  <td className="px-4 py-3 font-black text-[11px] text-white uppercase bg-sky-600/40 border-r border-slate-800 sticky left-0 z-10">
+                    Total
                   </td>
                   {uniqueDates.map(date => (
-                    <td key={date} className="px-4 py-4 text-center text-xs font-bold text-white border-t border-slate-700">
+                    <td key={date} className="px-4 py-3 text-center text-[11px] font-black text-white border-r border-slate-800/50 bg-slate-800/20">
                       {formatCurrency(
                         ranking.reduce((acc, curr) => acc + (curr.daily[date] || 0), 0)
                       )}
                     </td>
                   ))}
-                  <td className="px-6 py-4 text-right text-sm font-bold text-white bg-primary/40 border-t border-primary/50">
+                  <td className="px-4 py-3 text-right font-black text-[12px] text-sky-400 bg-slate-800 sticky right-0 z-10 border-l border-slate-800">
                     {formatCurrency(ranking.reduce((acc, curr) => acc + curr.paid, 0))}
                   </td>
                 </tr>
