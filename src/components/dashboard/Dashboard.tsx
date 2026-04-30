@@ -676,11 +676,11 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 grid grid-cols-1 gap-6">
+          <div className="lg:col-span-1 grid grid-cols-1 gap-6">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass-card p-6 rounded-2xl shadow-xl relative group md:col-span-2"
+              className="glass-card p-6 rounded-2xl shadow-xl relative group flex flex-col justify-center"
             >
               <button 
                 onClick={() => setIsGoalModalOpen(true)}
@@ -691,7 +691,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
               
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Recuperação de Cota</p>
+                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Meta de recuperação</p>
                   <h3 className="text-3xl font-bold text-white mt-1">
                     {((stats.totalPaid / (monthlyGoal || 1)) * 100).toFixed(1)}%
                   </h3>
@@ -725,7 +725,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             </motion.div>
           </div>
 
-          <div id="performance-chart" className="glass-card p-6 rounded-2xl shadow-xl flex flex-col relative overflow-hidden group">
+          <div id="performance-chart" className="glass-card p-6 rounded-2xl shadow-xl flex flex-col relative overflow-hidden group lg:col-span-2">
             {/* Background Glow */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all" />
             
