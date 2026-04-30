@@ -89,6 +89,9 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
   const [editingAgreement, setEditingAgreement] = useState<Agreement | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [transferringMember, setTransferringMember] = useState<UserProfile | null>(null);
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'yesterday' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [viewMode, setViewMode] = useState<'personal' | 'team'>(profile.role === 'supervisor' ? 'team' : 'personal');
   const [team, setTeam] = useState<Team | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -243,9 +246,33 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     if (filterStatus !== 'all') {
       filtered = filtered.filter(a => a.status === filterStatus);
     }
+
+    // Filtro por Data
+    if (dateFilter === 'today') {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      filtered = filtered.filter(a => new Date(a.createdAt) >= today);
+    } else if (dateFilter === 'yesterday') {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0,0,0,0);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      filtered = filtered.filter(a => {
+        const d = new Date(a.createdAt);
+        return d >= yesterday && d < today;
+      });
+    } else if (dateFilter === 'custom' && customStartDate && customEndDate) {
+      const start = new Date(customStartDate + 'T00:00:00');
+      const end = new Date(customEndDate + 'T23:59:59');
+      filtered = filtered.filter(a => {
+        const d = new Date(a.createdAt);
+        return d >= start && d <= end;
+      });
+    }
     
     return filtered;
-  }, [memberFilteredAgreements, searchTerm, filterStatus]);
+  }, [memberFilteredAgreements, searchTerm, filterStatus, dateFilter, customStartDate, customEndDate]);
 
   // Stats calculation based on member data (ignores search and status filter)
   const stats: DashboardStats = useMemo(() => {
@@ -831,36 +858,110 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
           </div>
         </section>
 
-        <section className="flex flex-wrap gap-4">
-          <FilterButton 
-            label="Total" 
-            count={stats.counts.total} 
-            colorClass="bg-slate-800 text-slate-400" 
-            active={filterStatus === 'all'} 
-            onClick={() => setFilterStatus('all')}
-          />
-          <FilterButton 
-            label="Pagos" 
-            count={stats.counts.paid} 
-            colorClass="bg-emerald-500/10 text-emerald-400" 
-            active={filterStatus === AgreementStatus.PAID} 
-            onClick={() => setFilterStatus(AgreementStatus.PAID)}
-          />
-          <FilterButton 
-            label="Aguardando" 
-            count={stats.counts.waiting} 
-            colorClass="bg-amber-500/10 text-amber-400" 
-            active={filterStatus === AgreementStatus.WAITING} 
-            onClick={() => setFilterStatus(AgreementStatus.WAITING)}
-          />
-          <FilterButton 
-            label="Faltas/Quebrados" 
-            count={stats.counts.broken} 
-            colorClass="bg-rose-500/10 text-rose-400" 
-            active={filterStatus === AgreementStatus.BROKEN} 
-            onClick={() => setFilterStatus(AgreementStatus.BROKEN)}
-          />
-        </section>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-2">
+              <FilterButton 
+                label="Total" 
+                count={stats.counts.total} 
+                colorClass="bg-slate-800 text-slate-400" 
+                active={filterStatus === 'all'} 
+                onClick={() => setFilterStatus('all')}
+              />
+              <FilterButton 
+                label="Pagos" 
+                count={stats.counts.paid} 
+                colorClass="bg-emerald-500/10 text-emerald-400" 
+                active={filterStatus === AgreementStatus.PAID} 
+                onClick={() => setFilterStatus(AgreementStatus.PAID)}
+              />
+              <FilterButton 
+                label="Aguardando" 
+                count={stats.counts.waiting} 
+                colorClass="bg-amber-500/10 text-amber-400" 
+                active={filterStatus === AgreementStatus.WAITING} 
+                onClick={() => setFilterStatus(AgreementStatus.WAITING)}
+              />
+              <FilterButton 
+                label="Quebrados" 
+                count={stats.counts.broken} 
+                colorClass="bg-rose-500/10 text-rose-400" 
+                active={filterStatus === AgreementStatus.BROKEN} 
+                onClick={() => setFilterStatus(AgreementStatus.BROKEN)}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 shadow-lg">
+              <button
+                onClick={() => setDateFilter('all')}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  dateFilter === 'all' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Tudo
+              </button>
+              <button
+                onClick={() => setDateFilter('today')}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  dateFilter === 'today' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Hoje
+              </button>
+              <button
+                onClick={() => setDateFilter('yesterday')}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  dateFilter === 'yesterday' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Ontem
+              </button>
+              <button
+                onClick={() => setDateFilter('custom')}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  dateFilter === 'custom' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Calendário
+              </button>
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {dateFilter === 'custom' && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="flex flex-wrap items-center gap-4 bg-slate-900/30 p-4 rounded-2xl border border-slate-800/50 border-dashed">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Início:</span>
+                    <input 
+                      type="date" 
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none transition-all"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Fim:</span>
+                    <input 
+                      type="date" 
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none transition-all"
+                    />
+                  </div>
+                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">
+                    Filtrando acordos registrados entre {customStartDate || '...'} e {customEndDate || '...'}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Performance Section (Leaderboard & Table) - Only for Team View */}
         {viewMode === 'team' && selectedTeamId !== 'all' && selectedMemberId === 'all' && (
