@@ -461,7 +461,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
               </div>
             </div>
 
-            {selectedTeamId !== 'all' && (
+            {profile.role === 'supervisor' && selectedTeamId !== 'all' && (
               <button 
                 onClick={() => {
                   const currentTeam = managedTeamsData.find(t => t.id === selectedTeamId);
