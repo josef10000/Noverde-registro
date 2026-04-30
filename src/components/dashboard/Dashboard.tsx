@@ -21,7 +21,8 @@ import {
   Link as LinkIcon,
   History,
   ArrowLeftRight,
-  Clock
+  Clock,
+  FileDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -486,6 +487,39 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     }
   };
 
+  const handleExport = () => {
+    const headers = ['Nome', 'CPF', 'Valor', 'Vencimento', 'Status', 'Origem', 'Tipo', 'Data Registro'];
+    
+    const csvContent = [
+      headers.join(';'),
+      ...filteredAgreements.map(a => [
+        a.clientName,
+        a.clientCpf,
+        a.value.toString().replace('.', ','),
+        a.dueDate.split('-').reverse().join('/'),
+        a.status === 'paid' ? 'Pago' : a.status === 'broken' ? 'Quebrado' : 'Aguardando',
+        a.origin,
+        a.type === 'quitacao' ? 'Quitação' : 
+        a.type === 'parcelamento' ? 'Parcelamento' :
+        a.type === 'parcela_atrasada' ? 'Parc. Atrasada' :
+        a.type === 'antecipacao' ? 'Antecipação' : a.type,
+        new Date(a.createdAt).toLocaleDateString('pt-BR')
+      ].join(';'))
+    ].join('\n');
+
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `acordos_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast('Exportação concluída!', 'success');
+  };
+
   const getEffectivenessColor = (rate: number, goal: number) => {
     if (rate >= goal) return 'text-emerald-400';
     if (rate >= goal * 0.75) return 'text-amber-400';
@@ -939,6 +973,16 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                 Calendário
               </button>
             </div>
+            
+            <button
+              onClick={handleExport}
+              disabled={filteredAgreements.length === 0}
+              className="flex items-center gap-2 bg-slate-800 hover:bg-emerald-600 text-emerald-400 hover:text-white px-4 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Exportar para Excel (CSV)"
+            >
+              <FileDown size={14} />
+              Exportar
+            </button>
           </div>
 
           <AnimatePresence>
