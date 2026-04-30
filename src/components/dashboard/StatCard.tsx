@@ -8,7 +8,7 @@ interface StatCardProps {
   icon: LucideIcon;
   trend?: string;
   subtitle?: string;
-  color: 'primary' | 'emerald' | 'rose' | 'amber';
+  color: 'primary' | 'emerald' | 'rose' | 'amber' | 'sky' | 'indigo';
   id?: string;
 }
 
@@ -25,7 +25,9 @@ export const StatCard = ({
     primary: 'bg-primary/10 text-primary',
     emerald: 'bg-emerald-500/10 text-emerald-400',
     rose: 'bg-rose-500/10 text-rose-400',
-    amber: 'bg-amber-500/10 text-amber-400'
+    amber: 'bg-amber-500/10 text-amber-400',
+    sky: 'bg-sky-500/10 text-sky-400',
+    indigo: 'bg-indigo-500/10 text-indigo-400'
   };
 
   return (
