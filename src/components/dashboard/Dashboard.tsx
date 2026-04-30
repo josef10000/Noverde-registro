@@ -20,7 +20,8 @@ import {
   TrendingUp,
   Link as LinkIcon,
   History,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
