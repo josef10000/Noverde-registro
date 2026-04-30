@@ -110,10 +110,10 @@ export const AgreementModal = ({
                 className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all appearance-none outline-none text-slate-200"
               >
                 <option value="" disabled>Selecione o tipo...</option>
-                <option value={AgreementType.QUITACAO}>Quitação</option>
-                <option value={AgreementType.PARCELAMENTO}>Parcelamento</option>
-                <option value={AgreementType.PARCELA_ATRASADA}>Parcela Atrasada</option>
-                <option value={AgreementType.ANTECIPACAO}>Antecipação</option>
+                <option value="quitacao">Quitação</option>
+                <option value="parcelamento">Parcelamento</option>
+                <option value="parcela_atrasada">Parcela Atrasada</option>
+                <option value="antecipacao">Antecipação</option>
               </select>
             </div>
             <div className="space-y-1.5">

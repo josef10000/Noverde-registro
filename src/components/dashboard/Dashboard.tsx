@@ -1086,10 +1086,10 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                         </td>
                         <td className="px-6 py-5">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter bg-slate-800/50 px-2 py-1 rounded border border-slate-700/50">
-                            {agreement.type === AgreementType.QUITACAO ? 'Quitação' : 
-                             agreement.type === AgreementType.PARCELAMENTO ? 'Parcelamento' :
-                             agreement.type === AgreementType.PARCELA_ATRASADA ? 'Parc. Atrasada' :
-                             agreement.type === AgreementType.ANTECIPACAO ? 'Antecipação' : agreement.type}
+                            {agreement.type === 'quitacao' ? 'Quitação' : 
+                             agreement.type === 'parcelamento' ? 'Parcelamento' :
+                             agreement.type === 'parcela_atrasada' ? 'Parc. Atrasada' :
+                             agreement.type === 'antecipacao' ? 'Antecipação' : agreement.type}
                           </span>
                         </td>
                         <td className="px-6 py-5 text-sm font-medium text-slate-300">

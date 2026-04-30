@@ -86,10 +86,10 @@ export const HistoryModal = ({
                       )}
                       <OriginBadge origin={item.origin} />
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                        {item.type === AgreementType.QUITACAO ? 'Quitação' : 
-                         item.type === AgreementType.PARCELAMENTO ? 'Parcelamento' :
-                         item.type === AgreementType.PARCELA_ATRASADA ? 'Parc. Atrasada' :
-                         item.type === AgreementType.ANTECIPACAO ? 'Antecipação' : item.type}
+                        {item.type === 'quitacao' ? 'Quitação' : 
+                         item.type === 'parcelamento' ? 'Parcelamento' :
+                         item.type === 'parcela_atrasada' ? 'Parc. Atrasada' :
+                         item.type === 'antecipacao' ? 'Antecipação' : item.type}
                       </span>
                     </div>
                   </div>
