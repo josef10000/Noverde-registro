@@ -279,6 +279,11 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const parseLocalDate = (dateStr: string) => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    };
+
     const totalProjected = memberFilteredAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
     const paidAgreements = memberFilteredAgreements.filter(a => a.status === AgreementStatus.PAID);
@@ -286,7 +291,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     
     const overdueAgreements = memberFilteredAgreements.filter(a => 
       a.status === AgreementStatus.WAITING && 
-      new Date(a.dueDate) < today
+      parseLocalDate(a.dueDate) < today
     );
     const totalOverdue = overdueAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
@@ -1227,7 +1232,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                           </span>
                         </td>
                         <td className="px-6 py-5 text-sm font-medium text-slate-300">
-                          {new Date(agreement.dueDate).toLocaleDateString('pt-BR')}
+                          {agreement.dueDate.split('-').reverse().join('/')}
                         </td>
                         <td className="px-6 py-5 text-sm font-bold text-white tabular-nums">
                           {formatCurrency(agreement.value)}

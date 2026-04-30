@@ -96,7 +96,7 @@ export const HistoryModal = ({
                   <div className="flex items-center gap-4 text-xs text-slate-400">
                     <div className="flex items-center gap-1">
                       <Clock size={12} />
-                      Vencimento: {new Date(item.dueDate).toLocaleDateString('pt-BR')}
+                      Vencimento: {item.dueDate.split('-').reverse().join('/')}
                     </div>
                     {item.paidAt && (
                       <div className="flex items-center gap-1 text-emerald-400">
