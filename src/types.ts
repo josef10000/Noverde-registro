@@ -59,6 +59,9 @@ export interface DashboardStats {
   totalPaid: number;
   totalOverdue: number;
   effectivenessRate: number;
+  ticketAverage: number;
+  remainingToGoal: number;
+  projection: number;
   counts: {
     total: number;
     paid: number;

@@ -278,6 +278,15 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         today: agreementsToday.length,
         month: agreementsMonth.length,
       },
+      ticketAverage: memberFilteredAgreements.length > 0 ? totalProjected / memberFilteredAgreements.length : 0,
+      remainingToGoal: Math.max(0, (monthlyGoal || 0) - totalPaid),
+      projection: (() => {
+        const now = new Date();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const currentDay = now.getDate();
+        const dailyAvg = totalPaid / currentDay;
+        return dailyAvg * daysInMonth;
+      })(),
       hourlyDistribution: memberFilteredAgreements.reduce((acc, a) => {
         const hour = new Date(a.createdAt).getHours();
         acc[hour] = (acc[hour] || 0) + 1;
@@ -553,6 +562,21 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             color="emerald" 
           />
           <StatCard 
+            title="Falta para Meta" 
+            value={formatCurrency(stats.remainingToGoal)} 
+            icon={Target} 
+            color="rose"
+            subtitle={`${((stats.totalPaid / (monthlyGoal || 1)) * 100).toFixed(1)}% atingido`}
+          />
+          <StatCard 
+            title="Projeção p/ Mês" 
+            value={formatCurrency(stats.projection)} 
+            icon={TrendingUp} 
+            color="sky"
+            subtitle="Baseado no ritmo atual"
+          />
+          
+          <StatCard 
             id="overdue-card"
             title="Valores Vencidos" 
             value={formatCurrency(stats.totalOverdue)} 
@@ -566,6 +590,13 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             icon={CheckCircle2} 
             color="primary"
             subtitle={`Hoje: ${stats.counts.paid} Pagos | ${stats.counts.waiting} Pendentes`}
+          />
+          <StatCard 
+            title="Ticket Médio" 
+            value={formatCurrency(stats.ticketAverage)} 
+            icon={Target} 
+            color="indigo"
+            subtitle="Média por acordo"
           />
           <StatCard 
             title="Produtividade" 
