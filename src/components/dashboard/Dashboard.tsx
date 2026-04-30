@@ -17,9 +17,9 @@ import {
   X,
   AlertCircle,
   Trophy,
-  TrendingUp,
   Link as LinkIcon,
-  History
+  History,
+  ArrowLeftRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -87,6 +87,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAgreement, setEditingAgreement] = useState<Agreement | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [transferringMember, setTransferringMember] = useState<UserProfile | null>(null);
   const [viewMode, setViewMode] = useState<'personal' | 'team'>(profile.role === 'supervisor' ? 'team' : 'personal');
   const [team, setTeam] = useState<Team | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -327,9 +328,32 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     }
   };
 
-  const handleRemoveOperator = (memberUid: string, memberName: string) => {
-    setMemberToRemove({ uid: memberUid, name: memberName });
-    setIsConfirmOpen(true);
+  const handleRemoveOperator = async (operatorId: string, operatorName: string) => {
+    if (!window.confirm(`Deseja remover ${operatorName} da equipe?`)) return;
+
+    try {
+      await updateDoc(doc(db, 'users', operatorId), {
+        teamId: null
+      });
+      showToast('Operador removido da equipe com sucesso!');
+      setTransferringMember(null);
+    } catch (error) {
+      console.error(error);
+      showToast('Erro ao remover operador.', 'error');
+    }
+  };
+
+  const handleTransferOperator = async (operatorId: string, newTeamId: string, teamName: string) => {
+    try {
+      await updateDoc(doc(db, 'users', operatorId), {
+        teamId: newTeamId
+      });
+      showToast(`Operador transferido para a equipe ${teamName}!`, 'success');
+      setTransferringMember(null);
+    } catch (error) {
+      console.error(error);
+      showToast('Erro ao transferir operador.', 'error');
+    }
   };
 
   const confirmRemoveOperator = async () => {
@@ -998,12 +1022,12 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRemoveOperator(member.uid, member.displayName);
+                        setTransferringMember(member);
                       }}
-                      className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/member:opacity-100 transition-all hover:bg-rose-600 shadow-lg z-10"
-                      title="Remover da equipe"
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-sky-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/member:opacity-100 transition-all hover:bg-sky-600 shadow-lg z-10"
+                      title="Gerenciar Membro"
                     >
-                      <X size={10} strokeWidth={3} />
+                      <ArrowLeftRight size={10} strokeWidth={3} />
                     </button>
                   )}
                 </div>
@@ -1202,6 +1226,79 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         history={clientHistory}
         isLoading={isLoadingHistory}
       />
+
+      {/* Modal de Remanejamento */}
+      <AnimatePresence>
+        {transferringMember && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setTransferringMember(null)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl border border-slate-800 overflow-hidden"
+            >
+              <div className="px-8 py-6 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-bold text-white">Gerenciar Membro</h2>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-widest">{transferringMember.displayName}</p>
+                </div>
+                <button 
+                  onClick={() => setTransferringMember(null)}
+                  className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-8 space-y-6">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Transferir para Equipe</label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {managedTeamsData
+                      .filter(t => t.id !== profile.teamId)
+                      .map(team => (
+                        <button
+                          key={team.id}
+                          onClick={() => handleTransferOperator(transferringMember.uid, team.id, team.name)}
+                          className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-2xl hover:border-primary/50 hover:bg-primary/5 transition-all group text-left"
+                        >
+                          <div>
+                            <p className="font-bold text-slate-200 group-hover:text-primary transition-colors">{team.name}</p>
+                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">ID: {team.id}</p>
+                          </div>
+                          <ArrowLeftRight size={18} className="text-slate-700 group-hover:text-primary transition-colors" />
+                        </button>
+                      ))}
+                    {managedTeamsData.filter(t => t.id !== profile.teamId).length === 0 && (
+                      <p className="text-xs text-slate-500 italic text-center py-4 bg-slate-950/50 rounded-2xl border border-dashed border-slate-800">
+                        Nenhuma outra equipe disponível para transferência.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800/50">
+                  <button
+                    onClick={() => handleRemoveOperator(transferringMember.uid, transferringMember.displayName)}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl transition-all font-bold text-xs uppercase tracking-widest"
+                  >
+                    <LogOut size={16} />
+                    Remover da Equipe Atual
+                  </button>
+                  <p className="text-[9px] text-slate-600 text-center mt-3 uppercase font-bold">Ao remover, o membro voltará para o onboarding</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <ConfirmModal
         isOpen={isConfirmOpen}
