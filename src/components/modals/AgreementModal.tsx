@@ -19,16 +19,36 @@ export const AgreementModal = ({
 }: AgreementModalProps) => {
   if (!isOpen) return null;
 
+  const normalizeValue = (val: string): number => {
+    if (!val) return 0;
+    // Remove R$, espaços e pontos de milhar (se houver vírgula depois)
+    let cleaned = val.replace(/[R$\s]/g, '');
+    
+    if (cleaned.includes(',') && cleaned.includes('.')) {
+      // Formato brasileiro: 1.234,56 -> 1234.56
+      cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+    } else if (cleaned.includes(',')) {
+      // Formato simples com vírgula: 1234,56 -> 1234.56
+      cleaned = cleaned.replace(',', '.');
+    }
+    
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  };
+
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    const rawValue = formData.get('value') as string;
+    const normalizedValue = normalizeValue(rawValue);
+
     const agreementData = {
       clientName: formData.get('name') as string,
       clientCpf: formData.get('cpf') as string,
       origin: formData.get('origin') as AgreementOrigin,
       dueDate: formData.get('dueDate') as string,
-      value: parseFloat(formData.get('value') as string),
+      value: normalizedValue,
       phone: formData.get('phone') as string,
       type: formData.get('type') as AgreementType,
       status: formData.get('initialStatus') as AgreementStatus,
@@ -123,8 +143,7 @@ export const AgreementModal = ({
                 <input 
                   required
                   name="value"
-                  type="number" 
-                  step="0.01"
+                  type="text" 
                   defaultValue={editingAgreement?.value}
                   placeholder="0,00" 
                   className="w-full bg-slate-950 border border-slate-800 pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-slate-200"
