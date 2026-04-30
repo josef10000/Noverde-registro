@@ -18,7 +18,8 @@ import {
   AlertCircle,
   Trophy,
   TrendingUp,
-  Link as LinkIcon
+  Link as LinkIcon,
+  History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -1071,15 +1072,30 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                         }`}
                       >
                         <td className="px-6 py-5">
-                          <button 
-                            onClick={() => handleClientClick(agreement.clientCpf)}
-                            className="flex flex-col text-left hover:opacity-70 transition-opacity"
-                          >
-                            <span className={`font-semibold text-slate-100 ${agreement.status === AgreementStatus.BROKEN ? 'text-slate-500' : ''}`}>
+                          <div className="flex flex-col text-left">
+                            <span className={`font-semibold text-slate-100 ${agreement.status === 'broken' ? 'text-slate-500' : ''}`}>
                               {agreement.clientName}
                             </span>
-                            <span className="text-xs text-sky-400/70 font-mono mt-0.5">{agreement.clientCpf}</span>
-                          </button>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(agreement.clientCpf.replace(/\D/g, ''));
+                                  showToast('CPF (apenas números) copiado!', 'success');
+                                }}
+                                className="text-xs text-sky-400/70 font-mono hover:text-sky-400 transition-colors"
+                                title="Copiar CPF"
+                              >
+                                {agreement.clientCpf}
+                              </button>
+                              <button 
+                                onClick={() => handleClientClick(agreement.clientCpf)}
+                                className="p-1 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded transition-all"
+                                title="Ver Histórico"
+                              >
+                                <History size={12} />
+                              </button>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-5">
                           <OriginBadge origin={agreement.origin} />
