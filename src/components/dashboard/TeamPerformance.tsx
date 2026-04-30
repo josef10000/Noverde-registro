@@ -55,6 +55,9 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
   }, [agreements, members]);
 
   const { ranking, uniqueDates } = performanceData;
+  
+  // Only show the last 5 days in the table
+  const tableDates = useMemo(() => uniqueDates.slice(-5), [uniqueDates]);
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split('-');
@@ -137,7 +140,7 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
                   <th className="px-4 py-3 text-left text-[11px] font-black text-white uppercase bg-sky-600/40 border-r border-slate-800 sticky left-0 z-20 min-w-[200px]">
                     PAGAMENTO TOTAL
                   </th>
-                  {uniqueDates.map(date => (
+                  {tableDates.map(date => (
                     <th key={date} className="px-4 py-3 text-center text-[10px] font-bold text-slate-300 uppercase bg-slate-800/50 border-r border-slate-700/30">
                       {formatDate(date)}
                     </th>
@@ -153,7 +156,7 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
                     <td className="px-4 py-2.5 font-bold text-xs bg-slate-950 border-r border-slate-800 sticky left-0 z-10 group-hover:bg-slate-900 transition-colors">
                       {row.name}
                     </td>
-                    {uniqueDates.map(date => (
+                    {tableDates.map(date => (
                       <td key={date} className="px-4 py-2.5 text-center text-[11px] font-medium border-r border-slate-800/30">
                         {row.daily[date] ? formatCurrency(row.daily[date]) : 'R$ 0,00'}
                       </td>
@@ -168,7 +171,7 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
                   <td className="px-4 py-3 font-black text-[11px] text-white uppercase bg-sky-600/40 border-r border-slate-800 sticky left-0 z-10">
                     Total
                   </td>
-                  {uniqueDates.map(date => (
+                  {tableDates.map(date => (
                     <td key={date} className="px-4 py-3 text-center text-[11px] font-black text-white border-r border-slate-800/50 bg-slate-800/20">
                       {formatCurrency(
                         ranking.reduce((acc, curr) => acc + (curr.daily[date] || 0), 0)
