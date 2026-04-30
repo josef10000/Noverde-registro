@@ -9,7 +9,8 @@ export enum AgreementOrigin {
   OKTOR = 'oktor',
   CALLIX = 'callix',
   WHATSAPP = 'whatsapp',
-  WEBPHONE = 'webphone'
+  WEBPHONE = 'webphone',
+  QUITE_DIGITAL = 'quite_digital'
 }
 
 export type UserRole = 'supervisor' | 'member';
@@ -67,4 +68,5 @@ export interface DashboardStats {
     today: number;
     month: number;
   };
+  hourlyDistribution: Record<number, number>;
 }

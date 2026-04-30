@@ -31,6 +31,7 @@ export const AgreementModal = ({
       value: parseFloat(formData.get('value') as string),
       phone: formData.get('phone') as string,
       email: formData.get('email') as string,
+      status: formData.get('initialStatus') as AgreementStatus,
     };
 
     onSubmit(agreementData);
@@ -137,22 +138,66 @@ export const AgreementModal = ({
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Origem do Atendimento *</label>
-            <select 
-              required
-              name="origin"
-              defaultValue={editingAgreement?.origin || ""}
-              className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all appearance-none outline-none text-slate-200"
-            >
-              <option value="" disabled>Selecione uma origem...</option>
-              <option value={AgreementOrigin.SALESFORCE}>Salesforce</option>
-              <option value={AgreementOrigin.OKTOR}>Oktor</option>
-              <option value={AgreementOrigin.CALLIX}>Callix</option>
-              <option value={AgreementOrigin.WHATSAPP}>WhatsApp</option>
-              <option value={AgreementOrigin.WEBPHONE}>Webphone</option>
-            </select>
-          </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Origem do Atendimento *</label>
+              <select 
+                required
+                name="origin"
+                defaultValue={editingAgreement?.origin || ""}
+                className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all appearance-none outline-none text-slate-200"
+              >
+                <option value="" disabled>Selecione uma origem...</option>
+                <option value={AgreementOrigin.SALESFORCE}>Salesforce</option>
+                <option value={AgreementOrigin.OKTOR}>Oktor</option>
+                <option value={AgreementOrigin.CALLIX}>Callix</option>
+                <option value={AgreementOrigin.WHATSAPP}>WhatsApp</option>
+                <option value={AgreementOrigin.WEBPHONE}>Webphone</option>
+                <option value={AgreementOrigin.QUITE_DIGITAL}>Quite Digital</option>
+              </select>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Status Inicial</label>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="relative flex flex-col cursor-pointer group">
+                  <input 
+                    type="radio" 
+                    name="initialStatus" 
+                    value={AgreementStatus.WAITING} 
+                    defaultChecked={!editingAgreement || editingAgreement.status === AgreementStatus.WAITING}
+                    className="peer hidden"
+                  />
+                  <div className="flex items-center gap-3 p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-sky-500/50 peer-checked:bg-sky-500/5 transition-all">
+                    <div className="w-5 h-5 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:border-sky-500 group-hover:border-slate-600 transition-all">
+                      <div className="w-2.5 h-2.5 rounded-full bg-sky-500 scale-0 peer-checked:scale-100 transition-all" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-300 peer-checked:text-white uppercase tracking-wider">Pendente</span>
+                      <span className="text-[9px] text-slate-500 font-medium">Aguardando pagamento</span>
+                    </div>
+                  </div>
+                </label>
+                
+                <label className="relative flex flex-col cursor-pointer group">
+                  <input 
+                    type="radio" 
+                    name="initialStatus" 
+                    value={AgreementStatus.PAID} 
+                    defaultChecked={editingAgreement?.status === AgreementStatus.PAID}
+                    className="peer hidden"
+                  />
+                  <div className="flex items-center gap-3 p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/5 transition-all">
+                    <div className="w-5 h-5 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:border-emerald-500 group-hover:border-slate-600 transition-all">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 scale-0 peer-checked:scale-100 transition-all" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-300 peer-checked:text-white uppercase tracking-wider">Já Pago</span>
+                      <span className="text-[9px] text-slate-500 font-medium">Registrar como efetivado</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
 
           <div className="flex gap-4 pt-4">
             <button 

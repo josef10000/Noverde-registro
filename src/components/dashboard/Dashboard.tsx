@@ -277,7 +277,12 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         overdue: overdueAgreements.length,
         today: agreementsToday.length,
         month: agreementsMonth.length,
-      }
+      },
+      hourlyDistribution: memberFilteredAgreements.reduce((acc, a) => {
+        const hour = new Date(a.createdAt).getHours();
+        acc[hour] = (acc[hour] || 0) + 1;
+        return acc;
+      }, {} as Record<number, number>)
     };
   }, [memberFilteredAgreements, monthlyGoal]);
 
@@ -372,21 +377,35 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
 
   const handleAddOrEditAgreement = async (data: any) => {
     if (!profile.teamId) return;
-    const id = editingAgreement?.id || Math.random().toString(36).substr(2, 9);
-    const agreementData = {
-      ...data,
-      status: (editingAgreement?.status || AgreementStatus.WAITING) as AgreementStatus,
-      createdAt: editingAgreement?.createdAt || new Date().toISOString(),
-      operatorId: editingAgreement?.operatorId || profile.uid,
-      teamId: profile.teamId
-    };
-
+    
     try {
-      await setDoc(doc(db, 'agreements', id), agreementData);
+      if (editingAgreement) {
+        const agreementRef = doc(db, 'agreements', editingAgreement.id);
+        await updateDoc(agreementRef, {
+          ...data,
+          status: data.status || editingAgreement.status
+        });
+        showToast('Acordo atualizado com sucesso!', 'success');
+      } else {
+        const id = Math.random().toString(36).substr(2, 9);
+        const now = new Date().toISOString();
+        const agreementData = {
+          id,
+          ...data,
+          status: data.status || AgreementStatus.WAITING,
+          operatorId: profile.uid,
+          teamId: profile.teamId,
+          createdAt: now,
+          paidAt: data.status === AgreementStatus.PAID ? now : null
+        };
+        await setDoc(doc(db, 'agreements', id), agreementData);
+        showToast('Acordo registrado com sucesso!', 'success');
+      }
       setIsModalOpen(false);
       setEditingAgreement(null);
     } catch (error) {
       console.error(error);
+      showToast('Erro ao salvar acordo.', 'error');
     }
   };
 
@@ -532,7 +551,6 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             value={formatCurrency(stats.totalPaid)} 
             icon={TrendingUp} 
             color="emerald" 
-            trend="12% vs mês ant."
           />
           <StatCard 
             id="overdue-card"
@@ -677,6 +695,81 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Nova Seção: Heatmap e Resumo Adicional */}
+        <section className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3 glass-card p-6 rounded-2xl shadow-xl relative overflow-hidden group">
+            <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-500/5 rounded-full blur-3xl" />
+            
+            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
+              <TrendingUp size={16} className="text-sky-400" />
+              Densidade de Acordos por Horário
+            </h4>
+            
+            <div className="grid grid-cols-12 md:grid-cols-24 gap-1.5 h-32 items-end">
+              {Array.from({ length: 24 }).map((_, hour) => {
+                const count = stats.hourlyDistribution[hour] || 0;
+                const counts = Object.values(stats.hourlyDistribution);
+                const max = counts.length > 0 ? Math.max(...counts) : 1;
+                const intensity = (count / max);
+                
+                return (
+                  <div key={hour} className="flex flex-col gap-2 items-center flex-1 h-full justify-end group/item">
+                    <motion.div 
+                      initial={{ height: 0 }}
+                      animate={{ height: count > 0 ? `${Math.max(10, intensity * 100)}%` : '4px' }}
+                      className="w-full rounded-t-sm transition-all duration-500 relative"
+                      style={{ 
+                        backgroundColor: count > 0 
+                          ? `rgba(14, 165, 233, ${0.3 + (intensity * 0.7)})` 
+                          : 'rgba(30, 41, 59, 0.3)',
+                        boxShadow: count > 0 ? `0 0 15px rgba(14, 165, 233, ${intensity * 0.4})` : 'none'
+                      }}
+                    >
+                      {count > 0 && (
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-[9px] font-bold text-white px-1.5 py-0.5 rounded border border-slate-700 opacity-0 group-hover/item:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                          {count} acordos
+                        </div>
+                      )}
+                    </motion.div>
+                    <span className="text-[7px] text-slate-500 font-bold uppercase">{hour}h</span>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-8 flex justify-between items-center border-t border-slate-800/50 pt-4">
+              <p className="text-[9px] text-slate-500 font-medium uppercase tracking-tighter">
+                Análise de produtividade temporal baseada em {stats.counts.total} registros
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-[8px] text-slate-500 uppercase font-bold">Intensidade:</span>
+                <div className="flex gap-0.5">
+                  {[0.2, 0.4, 0.6, 0.8, 1].map(v => (
+                    <div key={v} className="w-2 h-2 rounded-sm" style={{ backgroundColor: `rgba(14, 165, 233, ${v})` }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <StatCard 
+              title="Aguardando" 
+              value={stats.counts.waiting} 
+              icon={Loader2} 
+              color="amber"
+              subtitle="Pendente Pagto"
+            />
+            <StatCard 
+              title="Quebrados" 
+              value={stats.counts.broken} 
+              icon={X} 
+              color="rose"
+              subtitle="Faltas / Recusas"
+            />
           </div>
         </section>
 
