@@ -294,6 +294,12 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
       parseLocalDate(a.dueDate) < today
     );
     const totalOverdue = overdueAgreements.reduce((acc, curr) => acc + curr.value, 0);
+
+    const pendingTodayAgreements = memberFilteredAgreements.filter(a => 
+      a.status === AgreementStatus.WAITING && 
+      parseLocalDate(a.dueDate).getTime() === today.getTime()
+    );
+    const totalPendingToday = pendingTodayAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     
@@ -304,6 +310,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
       totalProjected,
       totalPaid,
       totalOverdue,
+      totalPendingToday,
       effectivenessRate: (totalPaid / (monthlyGoal || 1)) * 100,
       counts: {
         total: memberFilteredAgreements.length,
@@ -311,6 +318,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         waiting: memberFilteredAgreements.filter(a => a.status === AgreementStatus.WAITING).length,
         broken: memberFilteredAgreements.filter(a => a.status === AgreementStatus.BROKEN).length,
         overdue: overdueAgreements.length,
+        pendingToday: pendingTodayAgreements.length,
         today: agreementsToday.length,
         month: agreementsMonth.length,
       },
@@ -641,28 +649,28 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             value={formatCurrency(stats.totalOverdue)} 
             icon={AlertCircle} 
             color="rose"
-            subtitle={`${stats.counts.overdue} acordos pendentes`}
+            subtitle={`${stats.counts.overdue} acordos não pagos até ontem`}
           />
           <StatCard 
-            title="Volume de Acordos" 
+            title="Vencendo Hoje" 
+            value={formatCurrency(stats.totalPendingToday)} 
+            icon={Clock} 
+            color="amber"
+            subtitle={`${stats.counts.pendingToday} acordos pendentes p/ hoje`}
+          />
+          <StatCard 
+            title="Volume de Registros" 
             value={stats.counts.today} 
             icon={CheckCircle2} 
             color="primary"
-            subtitle={`Hoje: ${stats.counts.paid} Pagos | ${stats.counts.waiting} Pendentes`}
+            subtitle="Acordos cadastrados hoje"
           />
           <StatCard 
             title="Ticket Médio" 
             value={formatCurrency(stats.ticketAverage)} 
             icon={Target} 
             color="indigo"
-            subtitle="Média por acordo"
-          />
-          <StatCard 
-            title="Produtividade" 
-            value={(stats.counts.today / (currentTeamMembers.length || 1)).toFixed(1)} 
-            icon={Users} 
-            color="amber"
-            subtitle={`Média: ${stats.counts.month} registros no mês`}
+            subtitle="Média por acordo registrado"
           />
         </section>
 
