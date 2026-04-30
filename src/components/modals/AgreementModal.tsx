@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
-import { Agreement, AgreementOrigin, AgreementStatus } from '../../types';
+import { Agreement, AgreementOrigin, AgreementStatus, AgreementType } from '../../types';
 import { formatCPF } from '../../utils/masks';
 
 interface AgreementModalProps {
@@ -30,7 +30,7 @@ export const AgreementModal = ({
       dueDate: formData.get('dueDate') as string,
       value: parseFloat(formData.get('value') as string),
       phone: formData.get('phone') as string,
-      email: formData.get('email') as string,
+      type: formData.get('type') as AgreementType,
       status: formData.get('initialStatus') as AgreementStatus,
     };
 
@@ -102,14 +102,19 @@ export const AgreementModal = ({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">E-mail</label>
-              <input 
-                name="email"
-                type="email" 
-                defaultValue={editingAgreement?.email}
-                placeholder="exemplo@email.com" 
-                className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-slate-200"
-              />
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Tipo de Acordo *</label>
+              <select 
+                required
+                name="type"
+                defaultValue={editingAgreement?.type || ""}
+                className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all appearance-none outline-none text-slate-200"
+              >
+                <option value="" disabled>Selecione o tipo...</option>
+                <option value={AgreementType.QUITACAO}>Quitação</option>
+                <option value={AgreementType.PARCELAMENTO}>Parcelamento</option>
+                <option value={AgreementType.PARCELA_ATRASADA}>Parcela Atrasada</option>
+                <option value={AgreementType.ANTECIPACAO}>Antecipação</option>
+              </select>
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Valor do Acordo *</label>

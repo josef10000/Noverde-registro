@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { X, Loader2, Clock, CheckCircle2 } from 'lucide-react';
-import { Agreement, AgreementStatus } from '../../types';
+import { Agreement, AgreementStatus, AgreementType } from '../../types';
 import { OriginBadge } from '../dashboard/OriginBadge';
 import { formatCurrency } from '../../utils/masks';
 
@@ -85,6 +85,12 @@ export const HistoryModal = ({
                         <span className="text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white px-2 py-0.5 rounded">AGUARDANDO</span>
                       )}
                       <OriginBadge origin={item.origin} />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                        {item.type === AgreementType.QUITACAO ? 'Quitação' : 
+                         item.type === AgreementType.PARCELAMENTO ? 'Parcelamento' :
+                         item.type === AgreementType.PARCELA_ATRASADA ? 'Parc. Atrasada' :
+                         item.type === AgreementType.ANTECIPACAO ? 'Antecipação' : item.type}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-slate-400">

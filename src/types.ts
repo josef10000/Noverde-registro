@@ -13,6 +13,13 @@ export enum AgreementOrigin {
   QUITE_DIGITAL = 'quite_digital'
 }
 
+export enum AgreementType {
+  QUITACAO = 'quitacao',
+  PARCELAMENTO = 'parcelamento',
+  PARCELA_ATRASADA = 'parcela_atrasada',
+  ANTECIPACAO = 'antecipacao'
+}
+
 export type UserRole = 'supervisor' | 'member';
 
 export interface UserProfile {
@@ -46,7 +53,7 @@ export interface Agreement {
   dueDate: string;
   status: AgreementStatus;
   origin: AgreementOrigin;
-  email?: string;
+  type: AgreementType;
   phone?: string;
   operatorId: string; // Quem registrou
   teamId: string;     // A qual equipe pertence

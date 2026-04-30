@@ -1016,7 +1016,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
           </div>
           <input 
             type="text" 
-            placeholder="Buscar por Nome, CPF ou E-mail..." 
+            placeholder="Buscar por Nome ou CPF..." 
             className="w-full bg-slate-950 border border-slate-800 pl-12 pr-6 py-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all text-slate-200 placeholder:text-slate-500 outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -1039,6 +1039,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                 <tr className="bg-slate-900/50 border-b border-slate-800 text-slate-500">
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Cliente</th>
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Origem</th>
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Tipo</th>
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Vencimento</th>
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Valor</th>
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">Ação</th>
@@ -1081,6 +1082,14 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                         </td>
                         <td className="px-6 py-5">
                           <OriginBadge origin={agreement.origin} />
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter bg-slate-800/50 px-2 py-1 rounded border border-slate-700/50">
+                            {agreement.type === AgreementType.QUITACAO ? 'Quitação' : 
+                             agreement.type === AgreementType.PARCELAMENTO ? 'Parcelamento' :
+                             agreement.type === AgreementType.PARCELA_ATRASADA ? 'Parc. Atrasada' :
+                             agreement.type === AgreementType.ANTECIPACAO ? 'Antecipação' : agreement.type}
+                          </span>
                         </td>
                         <td className="px-6 py-5 text-sm font-medium text-slate-300">
                           {new Date(agreement.dueDate).toLocaleDateString('pt-BR')}
