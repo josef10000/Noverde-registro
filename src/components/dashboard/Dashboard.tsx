@@ -62,6 +62,7 @@ import { ConfirmModal } from '../modals/ConfirmModal';
 import { TeamPerformance } from './TeamPerformance';
 import { OriginBadge } from './OriginBadge';
 import { AgreementModal } from '../modals/AgreementModal';
+import { startTour } from '../../utils/tour';
 import { GoalModal } from '../modals/GoalModal';
 import { HistoryModal } from '../modals/HistoryModal';
 
@@ -190,6 +191,23 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     
     loadData();
   }, [selectedTeamId, profile.managedTeams]);
+
+  // Handle Tour
+  useEffect(() => {
+    if (profile && !profile.hasSeenTour) {
+      // Pequeno delay para garantir que o layout renderizou
+      const timer = setTimeout(() => {
+        startTour(profile.role, async () => {
+          try {
+            await updateDoc(doc(db, 'users', profile.uid), { hasSeenTour: true });
+          } catch (e) {
+            console.error("Erro ao salvar estado do tour:", e);
+          }
+        });
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [profile?.hasSeenTour]);
 
   // Filtering Logic
   const memberFilteredAgreements = useMemo(() => {
@@ -390,6 +408,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
               <h1 className="text-xl font-bold tracking-tight text-white leading-none">RNV Gestão</h1>
               {profile.managedTeams && profile.managedTeams.length > 1 ? (
                 <select 
+                  id="team-selector"
                   value={selectedTeamId}
                   onChange={(e) => setSelectedTeamId(e.target.value)}
                   className="bg-transparent text-[10px] text-sky-400 uppercase tracking-widest font-bold mt-1 outline-none border-none cursor-pointer hover:text-sky-300 transition-colors"
@@ -410,6 +429,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
           <div className="flex items-center gap-4 w-full md:w-auto justify-end">
             
             <div 
+              id="user-profile-menu"
               className="flex items-center gap-3 px-3 py-1.5 bg-slate-800/30 rounded-xl border border-slate-800 hover:border-slate-700 cursor-pointer transition-all group"
               onClick={onSettingsClick}
             >
@@ -447,6 +467,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             </button>
 
             <button 
+              id="new-agreement-btn"
               onClick={() => setIsModalOpen(true)}
               disabled={selectedTeamId === 'all'}
               className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-400 transition-all shadow-lg shadow-primary/10 active:scale-95 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
@@ -499,7 +520,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             </div>
           )}
         </div>
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section id="stats-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
             title="Total Projetado" 
             value={formatCurrency(stats.totalProjected)} 
@@ -514,6 +535,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             trend="12% vs mês ant."
           />
           <StatCard 
+            id="overdue-card"
             title="Valores Vencidos" 
             value={formatCurrency(stats.totalOverdue)} 
             icon={AlertCircle} 
@@ -586,7 +608,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             </motion.div>
           </div>
 
-          <div className="glass-card p-6 rounded-2xl shadow-xl flex flex-col relative overflow-hidden group">
+          <div id="performance-chart" className="glass-card p-6 rounded-2xl shadow-xl flex flex-col relative overflow-hidden group">
             {/* Background Glow */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all" />
             
@@ -876,6 +898,15 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </section>
+
+        {viewMode === 'team' && selectedTeamId !== 'all' && (
+          <section id="team-performance-module" className="mt-8">
+            <TeamPerformance 
+              agreements={agreements} 
+              members={currentTeamMembers} 
+            />
+          </section>
+        )}
 
         <section className="glass-card rounded-2xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">

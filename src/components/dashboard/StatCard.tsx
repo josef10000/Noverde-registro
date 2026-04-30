@@ -9,6 +9,7 @@ interface StatCardProps {
   trend?: string;
   subtitle?: string;
   color: 'primary' | 'emerald' | 'rose' | 'amber';
+  id?: string;
 }
 
 export const StatCard = ({ 
@@ -17,7 +18,8 @@ export const StatCard = ({
   icon: Icon, 
   trend, 
   subtitle,
-  color 
+  color,
+  id
 }: StatCardProps) => {
   const colorClasses = {
     primary: 'bg-primary/10 text-primary',
@@ -28,6 +30,7 @@ export const StatCard = ({
 
   return (
     <motion.div 
+      id={id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="glass-card p-6 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden group"
