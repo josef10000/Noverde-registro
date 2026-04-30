@@ -1025,14 +1025,6 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
           />
         </section>
 
-        {viewMode === 'team' && selectedTeamId !== 'all' && (
-          <section id="team-performance-module" className="mt-8">
-            <TeamPerformance 
-              agreements={agreements} 
-              members={currentTeamMembers} 
-            />
-          </section>
-        )}
 
         <section className="glass-card rounded-2xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
