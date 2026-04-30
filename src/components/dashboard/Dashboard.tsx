@@ -17,6 +17,7 @@ import {
   X,
   AlertCircle,
   Trophy,
+  TrendingUp,
   Link as LinkIcon,
   History,
   ArrowLeftRight
