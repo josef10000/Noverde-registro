@@ -50,6 +50,7 @@ import {
   Agreement, 
   AgreementStatus, 
   AgreementOrigin, 
+  AgreementType,
   DashboardStats, 
   UserProfile, 
   Team 
