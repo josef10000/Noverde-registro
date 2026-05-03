@@ -15,6 +15,7 @@ Este é um dashboard avançado para gestão de acordos, desenvolvido com React, 
 ## 🚀 Novidades na Versão Atual
 
 - **Refatoração Completa**: Código modularizado em componentes reutilizáveis (`src/components`).
+- **Reset Mensal e Histórico**: O dashboard agora "reseta" automaticamente ao início de cada mês, com um seletor de histórico para visualizar e exportar dados de meses anteriores.
 - **Gráficos Dinâmicos**: Visualização de performance meta vs. realizado usando `Recharts`.
 - **Máscaras Inteligentes**: Formatação automática de CPF e Telefone para melhor UX.
 - **CI/CD Integrado**: Validação automática de tipos e build via GitHub Actions.

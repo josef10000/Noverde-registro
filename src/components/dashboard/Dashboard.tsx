@@ -70,6 +70,7 @@ import { AgreementModal } from '../modals/AgreementModal';
 import { startTour } from '../../utils/tour';
 import { GoalModal } from '../modals/GoalModal';
 import { HistoryModal } from '../modals/HistoryModal';
+import { MONTHS, getMonthName, getYearRange } from '../../utils/date';
 
 import { ToastType } from '../ui/Toast';
 
@@ -107,6 +108,9 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const [selectedClientCpf, setSelectedClientCpf] = useState<string | null>(null);
   const [clientHistory, setClientHistory] = useState<Agreement[]>([]);
@@ -219,8 +223,15 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
   }, [profile?.hasSeenTour]);
 
   // Filtering Logic
+  const monthFilteredAgreements = useMemo(() => {
+    return agreements.filter(a => {
+      const d = new Date(a.createdAt);
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+  }, [agreements, selectedMonth, selectedYear]);
+
   const memberFilteredAgreements = useMemo(() => {
-    let filtered = agreements;
+    let filtered = monthFilteredAgreements;
     
     // Filter by View Mode
     if (viewMode === 'personal') {
@@ -230,7 +241,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     }
     
     return filtered;
-  }, [agreements, viewMode, profile.uid, selectedMemberId]);
+  }, [monthFilteredAgreements, viewMode, profile.uid, selectedMemberId]);
 
   const displayAgreements = useMemo(() => {
     let filtered = memberFilteredAgreements;
@@ -303,10 +314,14 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     );
     const totalPendingToday = pendingTodayAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const isCurrentMonth = selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();
+    const startOfMonth = new Date(selectedYear, selectedMonth, 1);
     
-    const agreementsToday = memberFilteredAgreements.filter(a => new Date(a.createdAt) >= today);
-    const agreementsMonth = memberFilteredAgreements.filter(a => new Date(a.createdAt) >= startOfMonth);
+    const agreementsToday = isCurrentMonth 
+      ? memberFilteredAgreements.filter(a => new Date(a.createdAt) >= today)
+      : [];
+    
+    const agreementsMonth = memberFilteredAgreements; // Já está filtrado por mês na origem
 
     return {
       totalProjected,
@@ -320,13 +335,14 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         waiting: memberFilteredAgreements.filter(a => a.status === AgreementStatus.WAITING).length,
         broken: memberFilteredAgreements.filter(a => a.status === AgreementStatus.BROKEN).length,
         overdue: overdueAgreements.length,
-        pendingToday: pendingTodayAgreements.length,
+        pendingToday: totalPendingToday > 0 ? pendingTodayAgreements.length : 0,
         today: agreementsToday.length,
         month: agreementsMonth.length,
       },
       ticketAverage: memberFilteredAgreements.length > 0 ? totalProjected / memberFilteredAgreements.length : 0,
       remainingToGoal: Math.max(0, (monthlyGoal || 0) - totalPaid),
       projection: (() => {
+        if (!isCurrentMonth) return totalPaid; // Se for mês passado, a projeção é o total pago
         const now = new Date();
         const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const currentDay = now.getDate();
@@ -511,7 +527,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `acordos_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `acordos_${getMonthName(selectedMonth).toLowerCase()}_${selectedYear}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -623,8 +639,37 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             </p>
           </div>
 
-          {profile.role === 'supervisor' && (
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
             <div className="flex bg-slate-900/80 backdrop-blur-md p-1 rounded-xl border border-slate-800 shadow-2xl">
+              <select
+                value={selectedMonth}
+                onChange={(e) => {
+                  setSelectedMonth(parseInt(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-300 outline-none border-none cursor-pointer px-3 py-2 hover:text-white transition-colors"
+              >
+                {MONTHS.map((month, index) => (
+                  <option key={month} value={index} className="bg-slate-900 text-white">{month}</option>
+                ))}
+              </select>
+              <div className="w-[1px] h-4 bg-slate-800 my-auto" />
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(parseInt(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-300 outline-none border-none cursor-pointer px-3 py-2 hover:text-white transition-colors"
+              >
+                {getYearRange().map(year => (
+                  <option key={year} value={year} className="bg-slate-900 text-white">{year}</option>
+                ))}
+              </select>
+            </div>
+
+            {profile.role === 'supervisor' && (
+              <div className="flex bg-slate-900/80 backdrop-blur-md p-1 rounded-xl border border-slate-800 shadow-2xl">
               <button
                 onClick={() => setViewMode('personal')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
