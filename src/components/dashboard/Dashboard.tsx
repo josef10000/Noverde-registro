@@ -1070,7 +1070,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         {/* Performance Section (Leaderboard & Table) - Only for Team View */}
         {viewMode === 'team' && selectedTeamId !== 'all' && selectedMemberId === 'all' && (
           <div className="mb-12">
-            <TeamPerformance agreements={agreements} members={currentTeamMembers} />
+            <TeamPerformance agreements={monthFilteredAgreements} members={currentTeamMembers} />
           </div>
         )}
 
