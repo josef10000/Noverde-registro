@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
-import { Agreement, AgreementOrigin, AgreementStatus, AgreementType } from '../../types';
+import { Agreement, AgreementOrigin, AgreementStatus, AgreementType, AgreementCategory } from '../../types';
 import { formatCPF } from '../../utils/masks';
 
 interface AgreementModalProps {
@@ -51,6 +51,7 @@ export const AgreementModal = ({
       value: normalizedValue,
       phone: formData.get('phone') as string,
       type: formData.get('type') as AgreementType,
+      category: formData.get('category') as AgreementCategory,
       status: formData.get('initialStatus') as AgreementStatus,
     };
 
@@ -156,7 +157,7 @@ export const AgreementModal = ({
                 required
                 name="dueDate"
                 type="date" 
-                defaultValue={editingAgreement?.dueDate}
+                defaultValue={editingAgreement?.dueDate || new Date().toISOString().split('T')[0]}
                 className="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-slate-200 color-scheme-dark"
               />
             </div>
@@ -178,6 +179,43 @@ export const AgreementModal = ({
                 <option value={AgreementOrigin.WEBPHONE}>Webphone</option>
                 <option value={AgreementOrigin.QUITE_DIGITAL}>Quite Digital</option>
               </select>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">O acordo é *</label>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="relative flex flex-col cursor-pointer group">
+                  <input 
+                    type="radio" 
+                    name="category" 
+                    value={AgreementCategory.FIXA} 
+                    defaultChecked={!editingAgreement || editingAgreement.category === AgreementCategory.FIXA}
+                    className="peer hidden"
+                  />
+                  <div className="flex items-center gap-3 p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-sky-500/50 peer-checked:bg-sky-500/5 transition-all">
+                    <div className="w-5 h-5 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:border-sky-500 group-hover:border-slate-600 transition-all">
+                      <div className="w-2.5 h-2.5 rounded-full bg-sky-500 scale-0 peer-checked:scale-100 transition-all" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-300 peer-checked:text-white uppercase tracking-wider">Fixa</span>
+                  </div>
+                </label>
+                
+                <label className="relative flex flex-col cursor-pointer group">
+                  <input 
+                    type="radio" 
+                    name="category" 
+                    value={AgreementCategory.VARIAVEL} 
+                    defaultChecked={editingAgreement?.category === AgreementCategory.VARIAVEL}
+                    className="peer hidden"
+                  />
+                  <div className="flex items-center gap-3 p-4 rounded-xl border border-slate-800 bg-slate-950 peer-checked:border-sky-500/50 peer-checked:bg-sky-500/5 transition-all">
+                    <div className="w-5 h-5 rounded-full border-2 border-slate-700 flex items-center justify-center peer-checked:border-sky-500 group-hover:border-slate-600 transition-all">
+                      <div className="w-2.5 h-2.5 rounded-full bg-sky-500 scale-0 peer-checked:scale-100 transition-all" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-300 peer-checked:text-white uppercase tracking-wider">Variável</span>
+                  </div>
+                </label>
+              </div>
             </div>
 
             <div className="space-y-3">

@@ -18,6 +18,8 @@ Este é um dashboard avançado para gestão de acordos, desenvolvido com React, 
 - **Reset Mensal e Histórico**: O dashboard agora "reseta" automaticamente ao início de cada mês, com um seletor de histórico para visualizar e exportar dados de meses anteriores.
 - **Gráficos Dinâmicos**: Visualização de performance meta vs. realizado usando `Recharts`.
 - **Máscaras Inteligentes**: Formatação automática de CPF e Telefone para melhor UX.
+- **Otimização de Cadastro**: Data de vencimento agora vem preenchida com o dia atual por padrão.
+- **Novos Campos de Negociação**: Implementação do campo "Tipo de Acordo" (Fixa ou Variável) para maior precisão no registro.
 - **CI/CD Integrado**: Validação automática de tipos e build via GitHub Actions.
 
 ## 📂 Estrutura do Projeto

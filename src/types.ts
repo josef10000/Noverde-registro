@@ -20,6 +20,11 @@ export enum AgreementType {
   ANTECIPACAO = 'antecipacao'
 }
 
+export enum AgreementCategory {
+  FIXA = 'fixa',
+  VARIAVEL = 'variavel'
+}
+
 export type UserRole = 'supervisor' | 'member';
 
 export interface UserProfile {
@@ -54,6 +59,7 @@ export interface Agreement {
   status: AgreementStatus;
   origin: AgreementOrigin;
   type: AgreementType;
+  category: AgreementCategory;
   phone?: string;
   operatorId: string; // Quem registrou
   teamId: string;     // A qual equipe pertence
