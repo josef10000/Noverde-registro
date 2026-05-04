@@ -14,6 +14,8 @@ Este é um dashboard avançado para gestão de acordos, desenvolvido com React, 
 
 ## 🚀 Novidades na Versão Atual
 
+- **Efetividade Financeira**: Taxa de efetividade agora baseada no valor total recuperado vs. total projetado.
+- **Filtros de Produtividade**: Novos seletores rápidos (Pagos, Vencidos, Pendentes) para facilitar a cobrança e gestão de carteira.
 - **Refatoração Completa**: Código modularizado em componentes reutilizáveis (`src/components`).
 - **Reset Mensal e Histórico**: O dashboard agora "reseta" automaticamente ao início de cada mês, com um seletor de histórico para visualizar e exportar dados de meses anteriores.
 - **Gráficos Dinâmicos**: Visualização de performance meta vs. realizado usando `Recharts`.

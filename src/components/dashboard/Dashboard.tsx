@@ -115,6 +115,12 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
   const [selectedClientCpf, setSelectedClientCpf] = useState<string | null>(null);
   const [clientHistory, setClientHistory] = useState<Agreement[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [subFilter, setSubFilter] = useState<'all' | 'paid' | 'overdue' | 'pending'>('all');
+
+  const parseLocalDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   // Load Members when team changes
   useEffect(() => {
@@ -260,6 +266,24 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
       filtered = filtered.filter(a => a.status === filterStatus);
     }
 
+    // Filter by SubFilter (Pagos, Vencidos, Pendentes)
+    if (subFilter !== 'all') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (subFilter === 'paid') {
+        filtered = filtered.filter(a => a.status === AgreementStatus.PAID);
+      } else if (subFilter === 'overdue') {
+        filtered = filtered.filter(a => 
+          a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today
+        );
+      } else if (subFilter === 'pending') {
+        filtered = filtered.filter(a => 
+          a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) >= today
+        );
+      }
+    }
+
     // Filtro por Data
     if (dateFilter === 'today') {
       const today = new Date();
@@ -292,11 +316,6 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const parseLocalDate = (dateStr: string) => {
-      const [year, month, day] = dateStr.split('-').map(Number);
-      return new Date(year, month - 1, day);
-    };
-
     const totalProjected = memberFilteredAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
     const paidAgreements = memberFilteredAgreements.filter(a => a.status === AgreementStatus.PAID);
@@ -328,7 +347,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
       totalPaid,
       totalOverdue,
       totalPendingToday,
-      effectivenessRate: (totalPaid / (monthlyGoal || 1)) * 100,
+      effectivenessRate: (totalPaid / (totalProjected || 1)) * 100,
       counts: {
         total: memberFilteredAgreements.length,
         paid: paidAgreements.length,
@@ -778,10 +797,10 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Taxa de Efetividade</p>
-                  <p className={`text-xl font-bold ${getEffectivenessColor((stats.counts.paid / (stats.counts.total || 1)) * 100, effectivenessGoal)}`}>
-                    {((stats.counts.paid / (stats.counts.total || 1)) * 100).toFixed(1)}%
+                  <p className={`text-xl font-bold ${getEffectivenessColor((stats.totalPaid / (stats.totalProjected || 1)) * 100, effectivenessGoal)}`}>
+                    {((stats.totalPaid / (stats.totalProjected || 1)) * 100).toFixed(1)}%
                   </p>
-                  <p className="text-[8px] text-slate-500 font-medium uppercase mt-0.5">Base: {stats.counts.total} acordos</p>
+                  <p className="text-[8px] text-slate-500 font-medium uppercase mt-0.5">Base: {formatCurrency(stats.totalProjected)} projetado</p>
                 </div>
               </div>
 
@@ -1253,6 +1272,49 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </section>
+
+        <section className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSubFilter('all')}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+              subFilter === 'all' 
+                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-600'
+            }`}
+          >
+            Todos
+          </button>
+          <button
+            onClick={() => setSubFilter('paid')}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+              subFilter === 'paid' 
+                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
+                : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10'
+            }`}
+          >
+            Pagos
+          </button>
+          <button
+            onClick={() => setSubFilter('overdue')}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+              subFilter === 'overdue' 
+                ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20' 
+                : 'bg-rose-500/5 border-rose-500/20 text-rose-500 hover:bg-rose-500/10'
+            }`}
+          >
+            Vencidos
+          </button>
+          <button
+            onClick={() => setSubFilter('pending')}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+              subFilter === 'pending' 
+                ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20' 
+                : 'bg-amber-500/5 border-amber-500/20 text-amber-500 hover:bg-amber-500/10'
+            }`}
+          >
+            Pendentes
+          </button>
         </section>
 
 
