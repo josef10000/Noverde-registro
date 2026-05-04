@@ -119,7 +119,7 @@ export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam, showT
           Voltar para Perfil
         </button>
 
-        <div className="bg-[#0f172a] rounded-3xl border border-slate-800 p-8 shadow-2xl">
+        <div className="glass-card rounded-3xl p-8 shadow-2xl">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-2xl font-bold text-white">Equipe: {selectedTeamForMembers.name}</h2>
@@ -189,7 +189,7 @@ export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam, showT
 
       <div className="space-y-6">
         {/* Card Principal de Perfil */}
-        <div className="bg-[#0f172a] rounded-3xl border border-slate-800 p-8 shadow-2xl overflow-hidden relative">
+        <div className="glass-card rounded-3xl p-8 shadow-2xl overflow-hidden relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
           
           <div className="flex items-center justify-between mb-8 relative">
@@ -276,7 +276,7 @@ export function ProfileSettings({ profile, onUpdate, onBack, onCreateTeam, showT
 
         {/* Gestão de Equipes */}
         {profile.role === 'supervisor' && (
-          <div className="bg-[#0f172a] rounded-3xl border border-slate-800 p-8 shadow-2xl">
+          <div className="glass-card rounded-3xl p-8 shadow-2xl">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-white">Minhas Equipes</h3>
               <button 

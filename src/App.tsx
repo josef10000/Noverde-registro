@@ -11,6 +11,7 @@ import { UserProfile } from './types';
 
 import { Toast, ToastType } from './components/ui/Toast';
 import { AnimatePresence } from 'motion/react';
+import { DynamicBackground } from './components/ui/DynamicBackground';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -116,6 +117,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      <DynamicBackground theme={profile?.theme} />
       {view === 'profile' ? (
         <ProfileSettings 
           profile={profile} 

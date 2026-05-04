@@ -9,41 +9,51 @@
   --color-primary: var(--primary-color, #38bdf8);
   --color-dashboard-bg: var(--bg-color, #020617);
   --color-dashboard-surface: var(--surface-color, #0f172a);
-  --color-dashboard-border: #1e293b;
+  --color-dashboard-border: rgba(255, 255, 255, 0.1);
+  --color-main-text: var(--text-main, #f1f5f9);
 }
 
 :root {
   --primary-color: #38bdf8;
   --bg-color: #020617;
   --surface-color: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.5);
+  --text-main: #f1f5f9;
 }
 
 [data-theme='dark'] {
-  --primary-color: #64748b;
+  --primary-color: #38bdf8;
   --bg-color: #020617;
   --surface-color: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.5);
+  --text-main: #f1f5f9;
 }
 
 [data-theme='purple'] {
   --primary-color: #a855f7;
   --bg-color: #0c0a09;
   --surface-color: #1c1917;
+  --card-bg: rgba(28, 25, 23, 0.6);
+  --text-main: #f5f5f4;
 }
 
 [data-theme='sky'] {
-  --primary-color: #38bdf8;
-  --bg-color: #020617;
-  --surface-color: #0f172a;
+  --primary-color: #0ea5e9;
+  --bg-color: #e0f2fe;
+  --surface-color: #f0f9ff;
+  --card-bg: rgba(255, 255, 255, 0.4);
+  --text-main: #0c4a6e;
 }
 
 @layer base {
   body {
-    @apply bg-dashboard-bg text-slate-200 antialiased;
+    @apply bg-dashboard-bg text-main-text antialiased;
   }
 }
 
 .glass-card {
-  @apply bg-dashboard-surface/50 backdrop-blur-md border border-dashboard-border;
+  background: var(--card-bg);
+  @apply backdrop-blur-md border border-white/10;
 }
 
 .data-row {

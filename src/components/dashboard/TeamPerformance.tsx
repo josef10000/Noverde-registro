@@ -11,7 +11,7 @@ interface TeamPerformanceProps {
 export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) => {
   if (members.length === 0) {
     return (
-      <div className="p-8 border-2 border-dashed border-slate-800 rounded-3xl text-center text-slate-500">
+      <div className="p-8 border-2 border-dashed border-white/10 rounded-3xl text-center text-slate-500">
         Nenhum membro encontrado nesta equipe para gerar o ranking.
       </div>
     );
@@ -83,7 +83,7 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
               className={`relative p-6 rounded-3xl border transition-all ${
                 index === 0 
                   ? 'bg-amber-500/10 border-amber-500/30 ring-1 ring-amber-500/20' 
-                  : 'bg-slate-900/50 border-slate-800'
+                  : 'glass-card'
               }`}
             >
               {index < 3 && (
@@ -132,12 +132,12 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
           <h2 className="text-xl font-bold text-white">Produtividade Diária (Pagos)</h2>
         </div>
 
-        <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+        <div className="glass-card rounded-xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="px-4 py-3 text-left text-[11px] font-black text-white uppercase bg-sky-600/40 border-r border-slate-800 sticky left-0 z-20 min-w-[200px]">
+                  <th className="px-4 py-3 text-left text-[11px] font-black text-white uppercase bg-sky-600/40 border-r border-white/10 sticky left-0 z-20 min-w-[200px]">
                     PAGAMENTO TOTAL
                   </th>
                   {tableDates.map(date => (
@@ -145,15 +145,15 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
                       {formatDate(date)}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-right text-[11px] font-black text-white uppercase bg-slate-800 border-l border-slate-700 sticky right-0 z-10">
+                  <th className="px-4 py-3 text-right text-[11px] font-black text-white uppercase bg-white/5 border-l border-white/10 sticky right-0 z-10">
                     Total
                   </th>
                 </tr>
               </thead>
               <tbody className="text-slate-300">
                 {ranking.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-800/30 border-b border-slate-800/50">
-                    <td className="px-4 py-2.5 font-bold text-xs bg-slate-950 border-r border-slate-800 sticky left-0 z-10 group-hover:bg-slate-900 transition-colors">
+                  <tr key={row.id} className="hover:bg-white/5 border-b border-white/5">
+                    <td className="px-4 py-2.5 font-bold text-xs bg-black/20 border-r border-white/10 sticky left-0 z-10 transition-colors">
                       {row.name}
                     </td>
                     {tableDates.map(date => (
@@ -161,24 +161,24 @@ export const TeamPerformance = ({ agreements, members }: TeamPerformanceProps) =
                         {row.daily[date] ? formatCurrency(row.daily[date]) : 'R$ 0,00'}
                       </td>
                     ))}
-                    <td className="px-4 py-2.5 text-right font-black text-xs text-white bg-slate-900 sticky right-0 z-10 border-l border-slate-800">
+                    <td className="px-4 py-2.5 text-right font-black text-xs text-white bg-black/30 sticky right-0 z-10 border-l border-white/10">
                       {formatCurrency(row.paid)}
                     </td>
                   </tr>
                 ))}
                 {/* Total Footer Row */}
-                <tr className="bg-sky-950/20">
-                  <td className="px-4 py-3 font-black text-[11px] text-white uppercase bg-sky-600/40 border-r border-slate-800 sticky left-0 z-10">
+                <tr className="bg-white/5">
+                  <td className="px-4 py-3 font-black text-[11px] text-white uppercase bg-sky-600/40 border-r border-white/10 sticky left-0 z-10">
                     Total
                   </td>
                   {tableDates.map(date => (
-                    <td key={date} className="px-4 py-3 text-center text-[11px] font-black text-white border-r border-slate-800/50 bg-slate-800/20">
+                    <td key={date} className="px-4 py-3 text-center text-[11px] font-black text-white border-r border-white/10 bg-white/5">
                       {formatCurrency(
                         ranking.reduce((acc, curr) => acc + (curr.daily[date] || 0), 0)
                       )}
                     </td>
                   ))}
-                  <td className="px-4 py-3 text-right font-black text-[12px] text-sky-400 bg-slate-800 sticky right-0 z-10 border-l border-slate-800">
+                  <td className="px-4 py-3 text-right font-black text-[12px] text-sky-400 bg-black/20 sticky right-0 z-10 border-l border-white/10">
                     {formatCurrency(ranking.reduce((acc, curr) => acc + curr.paid, 0))}
                   </td>
                 </tr>
