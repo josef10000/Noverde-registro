@@ -1255,9 +1255,6 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
           />
         </section>
 
-        </section>
-
-
         <section className="glass-card rounded-2xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
