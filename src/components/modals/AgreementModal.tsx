@@ -71,24 +71,25 @@ export const AgreementModal = ({
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        className="relative bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl border border-slate-800 overflow-hidden"
+        className="relative glass-card w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
-        <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+        <div className="px-8 py-5 border-b border-white/5 flex justify-between items-center bg-white/5 backdrop-blur-xl shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-white">
+            <h2 className="text-lg font-bold text-white leading-tight">
               {editingAgreement ? 'Editar Acordo' : 'Registrar Novo Acordo'}
             </h2>
-            <p className="text-xs text-slate-500 font-medium">Preencha os dados do cliente e a negociação.</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Gestão de Negociação</p>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-white"
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-500 hover:text-white"
           >
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleFormSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleFormSubmit} className="flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">CPF *</label>
@@ -261,11 +262,13 @@ export const AgreementModal = ({
               </div>
             </div>
 
-          <div className="flex gap-4 pt-4">
+          </div>
+          
+          <div className="p-8 pt-4 border-t border-white/5 bg-white/5 backdrop-blur-xl flex gap-4 shrink-0">
             <button 
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-4 rounded-xl border border-slate-800 font-bold text-slate-400 hover:bg-slate-800 transition-colors"
+              className="flex-1 px-6 py-4 rounded-xl border border-white/10 font-bold text-slate-400 hover:bg-white/5 transition-colors"
             >
               Cancelar
             </button>

@@ -40,13 +40,13 @@ export const GoalModal = ({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="relative bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl border border-slate-800 overflow-hidden"
+        className="relative glass-card w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden"
       >
-        <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+        <div className="px-8 py-5 border-b border-white/5 flex justify-between items-center bg-white/5 backdrop-blur-xl">
           <h2 className="text-lg font-bold text-white">Meta Mensal</h2>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-500"
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-500"
           >
             <X size={20} />
           </button>

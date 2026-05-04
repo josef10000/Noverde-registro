@@ -35,16 +35,16 @@ export const HistoryModal = ({
         initial={{ scale: 0.95, opacity: 0, x: 20 }}
         animate={{ scale: 1, opacity: 1, x: 0 }}
         exit={{ scale: 0.95, opacity: 0, x: 20 }}
-        className="relative bg-slate-900 w-full max-w-2xl max-h-[80vh] rounded-3xl shadow-2xl border border-slate-800 overflow-hidden flex flex-col"
+        className="relative glass-card w-full max-w-2xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
       >
-        <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+        <div className="px-8 py-5 border-b border-white/5 flex justify-between items-center bg-white/5 backdrop-blur-xl shrink-0">
           <div>
             <h2 className="text-lg font-bold text-white">Histórico do Cliente</h2>
-            <p className="text-xs text-slate-500 font-medium font-mono">CPF: {clientCpf}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest font-mono mt-0.5">CPF: {clientCpf}</p>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-white"
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-500 hover:text-white"
           >
             <X size={20} />
           </button>
@@ -114,7 +114,7 @@ export const HistoryModal = ({
             </div>
           )}
         </div>
-        <div className="px-8 py-4 border-t border-slate-800 bg-slate-900/50 flex justify-end">
+        <div className="px-8 py-4 border-t border-white/5 bg-white/5 backdrop-blur-xl flex justify-end shrink-0">
            <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Total de negociações: {history.length}</p>
         </div>
       </motion.div>

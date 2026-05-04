@@ -57,5 +57,29 @@
 }
 
 .data-row {
-  @apply transition-all duration-200 hover:bg-slate-800/50;
+  @apply transition-all duration-200 hover:bg-white/5;
+}
+
+/* Custom Scrollbar for Glassmorphism */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Fix for dark date inputs */
+input[type="date"].color-scheme-dark {
+  color-scheme: dark;
 }
