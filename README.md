@@ -14,6 +14,9 @@ Este é um dashboard avançado para gestão de acordos, desenvolvido com React, 
 
 ## 🚀 Novidades na Versão Atual
 
+- **Categorização Automática de Quebrados**: Acordos vencidos e não pagos são automaticamente categorizados como "Quebrados" no dashboard, com rótulos visuais de alerta.
+- **Sincronização Temporal Global**: Todo o dashboard (estatísticas, gráficos e cards) agora sincroniza instantaneamente com o filtro de data selecionado (Hoje, Ontem, Custom ou Tudo).
+- **Exportação Inteligente**: O CSV de exportação agora respeita os filtros ativos e inclui o status detalhado "Quebrado (Vencido)".
 - **Efetividade Financeira**: Taxa de efetividade agora baseada no valor total recuperado vs. total projetado.
 - **Refatoração Completa**: Código modularizado em componentes reutilizáveis (`src/components`).
 - **Reset Mensal e Histórico**: O dashboard agora "reseta" automaticamente ao início de cada mês, com um seletor de histórico para visualizar e exportar dados de meses anteriores.

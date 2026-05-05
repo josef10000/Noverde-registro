@@ -248,23 +248,9 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     return filtered;
   }, [monthFilteredAgreements, viewMode, profile.uid, selectedMemberId]);
 
-  const displayAgreements = useMemo(() => {
+  const timeFilteredAgreements = useMemo(() => {
     let filtered = memberFilteredAgreements;
     
-    // Filter by Search
-    if (searchTerm) {
-      filtered = filtered.filter(agreement => 
-        agreement.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        agreement.clientCpf.includes(searchTerm) ||
-        (agreement.email?.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-    
-    // Filter by Status
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(a => a.status === filterStatus);
-    }
-
     // Filtro por Data
     if (dateFilter === 'today') {
       const today = new Date();
@@ -290,38 +276,73 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     }
     
     return filtered;
-  }, [memberFilteredAgreements, searchTerm, filterStatus, dateFilter, customStartDate, customEndDate]);
+  }, [memberFilteredAgreements, dateFilter, customStartDate, customEndDate]);
 
-  // Stats calculation based on member data (ignores search and status filter)
+  const displayAgreements = useMemo(() => {
+    let filtered = timeFilteredAgreements;
+    
+    // Filter by Search
+    if (searchTerm) {
+      filtered = filtered.filter(agreement => 
+        agreement.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agreement.clientCpf.includes(searchTerm) ||
+        (agreement.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Filter by Status
+    if (filterStatus !== 'all') {
+      if (filterStatus === AgreementStatus.BROKEN) {
+        filtered = filtered.filter(a => 
+          a.status === AgreementStatus.BROKEN || 
+          (a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today)
+        );
+      } else if (filterStatus === AgreementStatus.WAITING) {
+        filtered = filtered.filter(a => 
+          a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) >= today
+        );
+      } else {
+        filtered = filtered.filter(a => a.status === filterStatus);
+      }
+    }
+    
+    return filtered;
+  }, [timeFilteredAgreements, searchTerm, filterStatus]);
+
+  // Stats calculation based on timeFilteredAgreements
   const stats: DashboardStats = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const totalProjected = memberFilteredAgreements.reduce((acc, curr) => acc + curr.value, 0);
+    const baseAgreements = timeFilteredAgreements;
+
+    const totalProjected = baseAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
-    const paidAgreements = memberFilteredAgreements.filter(a => a.status === AgreementStatus.PAID);
+    const paidAgreements = baseAgreements.filter(a => a.status === AgreementStatus.PAID);
     const totalPaid = paidAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
-    const overdueAgreements = memberFilteredAgreements.filter(a => 
+    const overdueAgreements = baseAgreements.filter(a => 
       a.status === AgreementStatus.WAITING && 
       parseLocalDate(a.dueDate) < today
     );
     const totalOverdue = overdueAgreements.reduce((acc, curr) => acc + curr.value, 0);
 
-    const pendingTodayAgreements = memberFilteredAgreements.filter(a => 
+    const pendingTodayAgreements = baseAgreements.filter(a => 
       a.status === AgreementStatus.WAITING && 
       parseLocalDate(a.dueDate).getTime() === today.getTime()
     );
     const totalPendingToday = pendingTodayAgreements.reduce((acc, curr) => acc + curr.value, 0);
     
     const isCurrentMonth = selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();
-    const startOfMonth = new Date(selectedYear, selectedMonth, 1);
     
     const agreementsToday = isCurrentMonth 
-      ? memberFilteredAgreements.filter(a => new Date(a.createdAt) >= today)
+      ? baseAgreements.filter(a => new Date(a.createdAt) >= today)
       : [];
     
-    const agreementsMonth = memberFilteredAgreements; // Já está filtrado por mês na origem
+    const agreementsMonth = memberFilteredAgreements; // Sempre o total do mês para referência
 
     return {
       totalProjected,
@@ -330,32 +351,32 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
       totalPendingToday,
       effectivenessRate: (totalPaid / (totalProjected || 1)) * 100,
       counts: {
-        total: memberFilteredAgreements.length,
+        total: baseAgreements.length,
         paid: paidAgreements.length,
-        waiting: memberFilteredAgreements.filter(a => a.status === AgreementStatus.WAITING).length,
-        broken: memberFilteredAgreements.filter(a => a.status === AgreementStatus.BROKEN).length,
+        waiting: baseAgreements.filter(a => a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) >= today).length,
+        broken: baseAgreements.filter(a => a.status === AgreementStatus.BROKEN || (a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today)).length,
         overdue: overdueAgreements.length,
         pendingToday: totalPendingToday > 0 ? pendingTodayAgreements.length : 0,
         today: agreementsToday.length,
         month: agreementsMonth.length,
       },
-      ticketAverage: memberFilteredAgreements.length > 0 ? totalProjected / memberFilteredAgreements.length : 0,
+      ticketAverage: baseAgreements.length > 0 ? totalProjected / baseAgreements.length : 0,
       remainingToGoal: Math.max(0, (monthlyGoal || 0) - totalPaid),
       projection: (() => {
-        if (!isCurrentMonth) return totalPaid; // Se for mês passado, a projeção é o total pago
+        if (!isCurrentMonth) return totalPaid;
         const now = new Date();
         const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const currentDay = now.getDate();
         const dailyAvg = totalPaid / currentDay;
         return dailyAvg * daysInMonth;
       })(),
-      hourlyDistribution: memberFilteredAgreements.reduce((acc, a) => {
+      hourlyDistribution: baseAgreements.reduce((acc, a) => {
         const hour = new Date(a.createdAt).getHours();
         acc[hour] = (acc[hour] || 0) + 1;
         return acc;
       }, {} as Record<number, number>)
     };
-  }, [memberFilteredAgreements, monthlyGoal]);
+  }, [timeFilteredAgreements, memberFilteredAgreements, monthlyGoal, selectedMonth, selectedYear]);
 
   // Chart Data
   const chartData = useMemo(() => [
@@ -513,7 +534,15 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
         a.clientCpf,
         a.value.toString().replace('.', ','),
         a.dueDate.split('-').reverse().join('/'),
-        a.status === 'paid' ? 'Pago' : a.status === 'broken' ? 'Quebrado' : 'Aguardando',
+        (() => {
+          const today = new Date();
+          today.setHours(0,0,0,0);
+          if (a.status === AgreementStatus.PAID) return 'Pago';
+          if (a.status === AgreementStatus.BROKEN || (a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today)) {
+            return (a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today) ? 'Quebrado (Vencido)' : 'Quebrado';
+          }
+          return 'Aguardando';
+        })(),
         a.origin,
         a.type === 'quitacao' ? 'Quitação' : 
         a.type === 'parcelamento' ? 'Parcelamento' :
@@ -1279,78 +1308,98 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                     </td>
                   </tr>
                 ) : (
-                  paginatedAgreements.map((agreement) => (
-                    <motion.tr 
-                        key={agreement.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className={`group transition-colors ${
-                          agreement.status === AgreementStatus.PAID 
-                            ? 'bg-emerald-500/5' 
-                            : agreement.status === AgreementStatus.BROKEN 
-                              ? 'bg-rose-500/5' 
-                              : 'hover:bg-slate-800/30'
-                        }`}
-                      >
-                        <td className="px-6 py-5">
-                          <div className="flex flex-col text-left">
-                            <span className={`font-semibold text-slate-100 ${agreement.status === 'broken' ? 'text-slate-500' : ''}`}>
-                              {agreement.clientName}
-                            </span>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <button 
-                                onClick={() => {
-                                  navigator.clipboard.writeText(agreement.clientCpf.replace(/\D/g, ''));
-                                  showToast('CPF (apenas números) copiado!', 'success');
-                                }}
-                                className="text-xs text-sky-400/70 font-mono hover:text-sky-400 transition-colors"
-                                title="Copiar CPF"
-                              >
-                                {agreement.clientCpf}
-                              </button>
-                              <button 
-                                onClick={() => handleClientClick(agreement.clientCpf)}
-                                className="p-1 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded transition-all"
-                                title="Ver Histórico"
-                              >
-                                <History size={12} />
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <OriginBadge origin={agreement.origin} />
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter bg-slate-800/50 px-2 py-1 rounded border border-slate-700/50">
-                            {agreement.type === 'quitacao' ? 'Quitação' : 
-                             agreement.type === 'parcelamento' ? 'Parcelamento' :
-                             agreement.type === 'parcela_atrasada' ? 'Parc. Atrasada' :
-                             agreement.type === 'antecipacao' ? 'Antecipação' : agreement.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 text-sm font-medium text-slate-300">
-                          {agreement.dueDate.split('-').reverse().join('/')}
-                        </td>
-                        <td className="px-6 py-5 text-sm font-bold text-white tabular-nums">
-                          {formatCurrency(agreement.value)}
-                        </td>
-                        <td className="px-6 py-5 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {agreement.status === AgreementStatus.PAID ? (
-                              <div className="flex items-center gap-1.5 text-emerald-400 pr-2">
-                                 <CheckCircle2 size={16} />
-                                 <span className="text-xs font-bold uppercase tracking-wide">Pago</span>
+                  paginatedAgreements.map((agreement) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const isOverdue = agreement.status === AgreementStatus.WAITING && parseLocalDate(agreement.dueDate) < today;
+                    const isBroken = agreement.status === AgreementStatus.BROKEN || isOverdue;
+
+                    return (
+                      <motion.tr 
+                          key={agreement.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className={`group transition-colors ${
+                            agreement.status === AgreementStatus.PAID 
+                              ? 'bg-emerald-500/5' 
+                              : isBroken
+                                ? 'bg-rose-500/5' 
+                                : 'hover:bg-slate-800/30'
+                          }`}
+                        >
+                          <td className="px-6 py-5">
+                            <div className="flex flex-col text-left">
+                              <span className={`font-semibold text-slate-100 ${isBroken ? 'text-slate-500' : ''}`}>
+                                {agreement.clientName}
+                              </span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <button 
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(agreement.clientCpf.replace(/\D/g, ''));
+                                    showToast('CPF (apenas números) copiado!', 'success');
+                                  }}
+                                  className="text-xs text-sky-400/70 font-mono hover:text-sky-400 transition-colors"
+                                  title="Copiar CPF"
+                                >
+                                  {agreement.clientCpf}
+                                </button>
+                                <button 
+                                  onClick={() => handleClientClick(agreement.clientCpf)}
+                                  className="p-1 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded transition-all"
+                                  title="Ver Histórico"
+                                >
+                                  <History size={12} />
+                                </button>
                               </div>
-                            ) : (
-                              <button 
-                                onClick={() => handleEfetivar(agreement.id)}
-                                className="bg-emerald-500/10 text-emerald-400 p-2 rounded-lg hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20"
-                                title="Efetivar Pagamento"
-                              >
-                                <Check size={18} />
-                              </button>
-                            )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <OriginBadge origin={agreement.origin} />
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter bg-slate-800/50 px-2 py-1 rounded border border-slate-700/50">
+                              {agreement.type === 'quitacao' ? 'Quitação' : 
+                               agreement.type === 'parcelamento' ? 'Parcelamento' :
+                               agreement.type === 'parcela_atrasada' ? 'Parc. Atrasada' :
+                               agreement.type === 'antecipacao' ? 'Antecipação' : agreement.type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex flex-col">
+                              <span className={`text-sm font-medium ${isOverdue ? 'text-rose-400' : 'text-slate-300'}`}>
+                                {agreement.dueDate.split('-').reverse().join('/')}
+                              </span>
+                              {isOverdue && (
+                                <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Vencido</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-sm font-bold text-white tabular-nums">
+                            {formatCurrency(agreement.value)}
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {agreement.status === AgreementStatus.PAID ? (
+                                <div className="flex items-center gap-1.5 text-emerald-400 pr-2">
+                                   <CheckCircle2 size={16} />
+                                   <span className="text-xs font-bold uppercase tracking-wide">Pago</span>
+                                </div>
+                              ) : (
+                                <>
+                                  {isOverdue && (
+                                    <div className="flex items-center gap-1 text-rose-500/40 mr-1 hidden sm:flex">
+                                      <AlertCircle size={14} />
+                                    </div>
+                                  )}
+                                  <button 
+                                    onClick={() => handleEfetivar(agreement.id)}
+                                    className="bg-emerald-500/10 text-emerald-400 p-2 rounded-lg hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20"
+                                    title="Efetivar Pagamento"
+                                  >
+                                    <Check size={18} />
+                                  </button>
+                                </>
+                              )}
 
                             <div className="flex items-center gap-1 border-l border-slate-800 pl-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button 
@@ -1373,8 +1422,9 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
                             </div>
                           </div>
                         </td>
-                      </motion.tr>
-                    ))
+                        </motion.tr>
+                    );
+                  })
                   )}
               </tbody>
             </table>
