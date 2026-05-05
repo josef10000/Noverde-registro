@@ -312,65 +312,80 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
     return filtered;
   }, [timeFilteredAgreements, searchTerm, filterStatus]);
 
-  // Stats calculation based on timeFilteredAgreements
+  // Stats calculation
   const stats: DashboardStats = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const baseAgreements = timeFilteredAgreements;
+    // Fonte Mensal (Sempre o mês selecionado)
+    const monthAgreements = memberFilteredAgreements;
+    
+    // Fonte Filtrada (Tabela e Gráfico)
+    const filteredAgreements = timeFilteredAgreements;
 
-    const totalProjected = baseAgreements.reduce((acc, curr) => acc + curr.value, 0);
+    // Cálculos Mensais
+    const totalProjected = monthAgreements.reduce((acc, curr) => acc + curr.value, 0);
+    const paidAgreementsMonth = monthAgreements.filter(a => a.status === AgreementStatus.PAID);
+    const totalPaidMonth = paidAgreementsMonth.reduce((acc, curr) => acc + curr.value, 0);
     
-    const paidAgreements = baseAgreements.filter(a => a.status === AgreementStatus.PAID);
-    const totalPaid = paidAgreements.reduce((acc, curr) => acc + curr.value, 0);
-    
-    const overdueAgreements = baseAgreements.filter(a => 
+    const overdueAgreementsMonth = monthAgreements.filter(a => 
       a.status === AgreementStatus.WAITING && 
       parseLocalDate(a.dueDate) < today
     );
-    const totalOverdue = overdueAgreements.reduce((acc, curr) => acc + curr.value, 0);
+    const totalOverdueMonth = overdueAgreementsMonth.reduce((acc, curr) => acc + curr.value, 0);
 
-    const pendingTodayAgreements = baseAgreements.filter(a => 
+    const pendingTodayAgreementsMonth = monthAgreements.filter(a => 
       a.status === AgreementStatus.WAITING && 
       parseLocalDate(a.dueDate).getTime() === today.getTime()
     );
-    const totalPendingToday = pendingTodayAgreements.reduce((acc, curr) => acc + curr.value, 0);
-    
+    const totalPendingTodayMonth = pendingTodayAgreementsMonth.reduce((acc, curr) => acc + curr.value, 0);
+
+    // Cálculos Filtrados (Produtividade Diária)
+    const paidAgreementsFiltered = filteredAgreements.filter(a => a.status === AgreementStatus.PAID);
+    const totalPaidFiltered = paidAgreementsFiltered.reduce((acc, curr) => acc + curr.value, 0);
+
     const isCurrentMonth = selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();
     
     const agreementsToday = isCurrentMonth 
-      ? baseAgreements.filter(a => new Date(a.createdAt) >= today)
+      ? monthAgreements.filter(a => new Date(a.createdAt) >= today)
       : [];
-    
-    const agreementsMonth = memberFilteredAgreements; // Sempre o total do mês para referência
 
     return {
       totalProjected,
-      totalPaid,
-      totalOverdue,
-      totalPendingToday,
-      effectivenessRate: (totalPaid / (totalProjected || 1)) * 100,
+      totalPaid: totalPaidMonth,
+      filteredPaidValue: totalPaidFiltered,
+      totalOverdue: totalOverdueMonth,
+      totalPendingToday: totalPendingTodayMonth,
+      effectivenessRate: (totalPaidMonth / (totalProjected || 1)) * 100,
       counts: {
-        total: baseAgreements.length,
-        paid: paidAgreements.length,
-        waiting: baseAgreements.filter(a => a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) >= today).length,
-        broken: baseAgreements.filter(a => a.status === AgreementStatus.BROKEN || (a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today)).length,
-        overdue: overdueAgreements.length,
-        pendingToday: totalPendingToday > 0 ? pendingTodayAgreements.length : 0,
+        month: {
+          total: monthAgreements.length,
+          paid: paidAgreementsMonth.length,
+          waiting: monthAgreements.filter(a => a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) >= today).length,
+          broken: monthAgreements.filter(a => a.status === AgreementStatus.BROKEN || (a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today)).length,
+          overdue: overdueAgreementsMonth.length,
+          pendingToday: pendingTodayAgreementsMonth.length,
+        },
+        filtered: {
+          total: filteredAgreements.length,
+          paid: paidAgreementsFiltered.length,
+          waiting: filteredAgreements.filter(a => a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) >= today).length,
+          broken: filteredAgreements.filter(a => a.status === AgreementStatus.BROKEN || (a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today)).length,
+          overdue: filteredAgreements.filter(a => a.status === AgreementStatus.WAITING && parseLocalDate(a.dueDate) < today).length,
+        },
         today: agreementsToday.length,
-        month: agreementsMonth.length,
       },
-      ticketAverage: baseAgreements.length > 0 ? totalProjected / baseAgreements.length : 0,
-      remainingToGoal: Math.max(0, (monthlyGoal || 0) - totalPaid),
+      ticketAverage: monthAgreements.length > 0 ? totalProjected / monthAgreements.length : 0,
+      remainingToGoal: Math.max(0, (monthlyGoal || 0) - totalPaidMonth),
       projection: (() => {
-        if (!isCurrentMonth) return totalPaid;
+        if (!isCurrentMonth) return totalPaidMonth;
         const now = new Date();
         const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const currentDay = now.getDate();
-        const dailyAvg = totalPaid / currentDay;
+        const dailyAvg = totalPaidMonth / currentDay;
         return dailyAvg * daysInMonth;
       })(),
-      hourlyDistribution: baseAgreements.reduce((acc, a) => {
+      hourlyDistribution: filteredAgreements.reduce((acc, a) => {
         const hour = new Date(a.createdAt).getHours();
         acc[hour] = (acc[hour] || 0) + 1;
         return acc;
@@ -733,10 +748,11 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             color="primary" 
           />
           <StatCard 
-            title="Efetivamente Pago" 
-            value={formatCurrency(stats.totalPaid)} 
+            title="Produtividade Diária (Pagos)" 
+            value={formatCurrency(stats.filteredPaidValue)} 
             icon={TrendingUp} 
             color="emerald" 
+            subtitle={`${stats.counts.filtered.paid} acordos pagos no período`}
           />
           <StatCard 
             title="Falta para Meta" 
@@ -759,14 +775,14 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             value={formatCurrency(stats.totalOverdue)} 
             icon={AlertCircle} 
             color="rose"
-            subtitle={`${stats.counts.overdue} acordos não pagos até ontem`}
+            subtitle={`${stats.counts.month.overdue} acordos não pagos até ontem`}
           />
           <StatCard 
             title="Vencendo Hoje" 
             value={formatCurrency(stats.totalPendingToday)} 
             icon={Clock} 
             color="amber"
-            subtitle={`${stats.counts.pendingToday} acordos pendentes p/ hoje`}
+            subtitle={`${stats.counts.month.pendingToday} acordos pendentes p/ hoje`}
           />
           <StatCard 
             title="Volume de Registros" 
@@ -986,28 +1002,28 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             <div className="flex flex-wrap gap-2">
               <FilterButton 
                 label="Total" 
-                count={stats.counts.total} 
+                count={stats.counts.filtered.total} 
                 colorClass="bg-slate-800 text-slate-400" 
                 active={filterStatus === 'all'} 
                 onClick={() => setFilterStatus('all')}
               />
               <FilterButton 
                 label="Pagos" 
-                count={stats.counts.paid} 
+                count={stats.counts.filtered.paid} 
                 colorClass="bg-emerald-500/10 text-emerald-400" 
                 active={filterStatus === AgreementStatus.PAID} 
                 onClick={() => setFilterStatus(AgreementStatus.PAID)}
               />
               <FilterButton 
                 label="Aguardando" 
-                count={stats.counts.waiting} 
+                count={stats.counts.filtered.waiting} 
                 colorClass="bg-amber-500/10 text-amber-400" 
                 active={filterStatus === AgreementStatus.WAITING} 
                 onClick={() => setFilterStatus(AgreementStatus.WAITING)}
               />
               <FilterButton 
                 label="Quebrados" 
-                count={stats.counts.broken} 
+                count={stats.counts.filtered.broken} 
                 colorClass="bg-rose-500/10 text-rose-400" 
                 active={filterStatus === AgreementStatus.BROKEN} 
                 onClick={() => setFilterStatus(AgreementStatus.BROKEN)}

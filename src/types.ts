@@ -70,6 +70,7 @@ export interface Agreement {
 export interface DashboardStats {
   totalProjected: number;
   totalPaid: number;
+  filteredPaidValue: number;
   totalOverdue: number;
   totalPendingToday: number;
   effectivenessRate: number;
@@ -77,14 +78,22 @@ export interface DashboardStats {
   remainingToGoal: number;
   projection: number;
   counts: {
-    total: number;
-    paid: number;
-    waiting: number;
-    broken: number;
-    overdue: number;
-    pendingToday: number;
-    today: number;
-    month: number;
+    month: {
+      total: number;
+      paid: number;
+      waiting: number;
+      broken: number;
+      overdue: number;
+      pendingToday: number;
+    };
+    filtered: {
+      total: number;
+      paid: number;
+      waiting: number;
+      broken: number;
+      overdue: number;
+    };
+    today: number; // Volume de registros hoje
   };
   hourlyDistribution: Record<number, number>;
 }
