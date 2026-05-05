@@ -966,7 +966,7 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
             
             <div className="mt-8 flex justify-between items-center border-t border-slate-800/50 pt-4">
               <p className="text-[9px] text-slate-500 font-medium uppercase tracking-tighter">
-                Análise de produtividade temporal baseada em {stats.counts.total} registros
+                Análise de produtividade temporal baseada em {stats.counts.filtered.total} registros
               </p>
               <div className="flex items-center gap-2">
                 <span className="text-[8px] text-slate-500 uppercase font-bold">Intensidade:</span>
@@ -982,14 +982,14 @@ export const Dashboard = ({ user, profile, onSettingsClick, showToast }: Dashboa
           <div className="flex flex-col gap-6">
             <StatCard 
               title="Aguardando" 
-              value={stats.counts.waiting} 
+              value={stats.counts.month.waiting} 
               icon={Loader2} 
               color="amber"
               subtitle="Pendente Pagto"
             />
             <StatCard 
               title="Quebrados" 
-              value={stats.counts.broken} 
+              value={stats.counts.month.broken} 
               icon={X} 
               color="rose"
               subtitle="Faltas / Recusas"
